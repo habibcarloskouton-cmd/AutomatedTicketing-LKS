@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutomatedTicketing LKS v1.5</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* =============================================
+   SHADOW GARDEN — CID KAGENOU DARK MODE
+   ============================================= */
+:root {
+  /* Dark (Shadow Garden) */
+  --bg-void:    #04050a;
+  --bg-abyss:   #080c14;
+  --bg-shadow:  #0d1220;
+  --bg-card:    #111827;
+  --bg-card-h:  #161f30;
+  --bg-glass:   rgba(13,18,32,0.85);
+  --border:     rgba(120,160,255,0.07);
+  --border-neon:rgba(120,160,255,0.22);
+  --border-v:   rgba(160,120,255,0.22);
+
+  /* Cid aura palette */
+  --neon-blue:  #4fc3f7;
+  --neon-violet:#a78bfa;
+  --neon-cyan:  #22d3ee;
+  --neon-white: #e2e8f0;
+  --shadow-mist:#1e3a5f;
+
+  --text-1: #e2e8f0;
+  --text-2: #7a90b8;
+  --text-3: #3a4d70;
+
+  --accent:     #4fc3f7;
+  --accent-g:   rgba(79,195,247,0.12);
+  --accent-glo: rgba(79,195,247,0.4);
+  --accent2:    #a78bfa;
+  --accent2-g:  rgba(167,139,250,0.12);
+  --accent3:    #34d399;
+  --accent4:    #f87171;
+  --accent5:    #fbbf24;
+
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.6);
+  --shadow-md:  0 8px 40px rgba(0,0,0,0.7);
+  --shadow-lg:  0 20px 80px rgba(0,0,0,0.8);
+  --shadow-neon:0 0 20px rgba(79,195,247,0.15), 0 0 60px rgba(79,195,247,0.05);
+  --shadow-v:   0 0 20px rgba(167,139,250,0.15), 0 0 60px rgba(167,139,250,0.05);
+  --neu:        3px 3px 10px rgba(0,0,0,0.7), -1px -1px 6px rgba(79,195,247,0.04);
+
+  --nav-bg:     rgba(4,5,10,0.97);
+  --scr:        #0d1220;
+  --scr-t:      #1e3a5f;
+
+  --transition-page: 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+[data-theme="light"] {
+  --bg-void:    #ddeeff;
+  --bg-abyss:   #e8f4fb;
+  --bg-shadow:  #f0f8ff;
+  --bg-card:    #ffffff;
+  --bg-card-h:  #f5fbff;
+  --bg-glass:   rgba(255,255,255,0.85);
+  --border:     rgba(0,80,160,0.08);
+  --border-neon:rgba(49,130,206,0.25);
+  --border-v:   rgba(107,70,193,0.2);
+
+  --neon-blue:  #2b6cb0;
+  --neon-violet:#6b46c1;
+  --neon-cyan:  #0987a0;
+  --neon-white: #1a202c;
+  --shadow-mist:#bee3f8;
+
+  --text-1: #1a202c;
+  --text-2: #4a6080;
+  --text-3: #a0b4cc;
+
+  --accent:     #3182ce;
+  --accent-g:   rgba(49,130,206,0.08);
+  --accent-glo: rgba(49,130,206,0.3);
+  --accent2:    #7c3aed;
+  --accent2-g:  rgba(124,58,237,0.08);
+  --accent3:    #059669;
+  --accent4:    #dc2626;
+  --accent5:    #d97706;
+
+  --shadow-sm:  0 2px 12px rgba(60,120,180,0.1);
+  --shadow-md:  0 8px 40px rgba(60,120,180,0.12);
+  --shadow-lg:  0 20px 80px rgba(60,120,180,0.15);
+  --shadow-neon:0 0 20px rgba(49,130,206,0.1);
+  --shadow-v:   0 0 20px rgba(107,70,193,0.1);
+  --neu:        4px 4px 14px rgba(140,180,220,0.5), -3px -3px 10px rgba(255,255,255,0.9);
+
+  --nav-bg:     rgba(232,244,251,0.97);
+  --scr:        #d1e8f5;
+  --scr-t:      #93c5d9;
+}
+
+/* =============================================
+   RESET & BASE
+   ============================================= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--scr)}
+::-webkit-scrollbar-thumb{background:var(--scr-t);border-radius:2px}
+
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg-void);
+  color:var(--text-1);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background var(--transition-page),color var(--transition-page);
+}
+
+/* === SHADOW GRAIN OVERLAY === */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 15%, rgba(79,195,247,0.04) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 50% at 90% 85%, rgba(167,139,250,0.05) 0%,transparent 70%),
+    radial-gradient(ellipse 30% 30% at 50% 50%, rgba(34,211,238,0.02) 0%,transparent 60%);
+  transition:background var(--transition-page);
+}
+
+/* Scanline texture — dark mode only */
+[data-theme="dark"] body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,transparent 2px,
+    rgba(79,195,247,0.012) 2px,rgba(79,195,247,0.012) 3px
+  );
+  animation:scanDrift 8s linear infinite;
+}
+@keyframes scanDrift{from{background-position:0 0}to{background-position:0 100px}}
+
+/* =============================================
+   LAYOUT
+   ============================================= */
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* =============================================
+   SIDEBAR — Shadow Garden style
+   ============================================= */
+.sidebar{
+  width:232px;min-width:232px;
+  background:var(--nav-bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;height:100vh;
+  z-index:200;
+  backdrop-filter:blur(24px);
+  transition:background var(--transition-page);
+}
+
+/* Glowing left strip */
+[data-theme="dark"] .sidebar::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,var(--neon-blue),var(--neon-violet),transparent);
+  opacity:0.35;
+}
+
+.logo-wrap{
+  padding:22px 18px 16px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.logo-gem{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:10px;
+  box-shadow:var(--shadow-neon);
+  position:relative;overflow:hidden;
+}
+[data-theme="dark"] .logo-gem::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+}
+.logo-name{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  letter-spacing:.04em;line-height:1.2;
+}
+.logo-sub{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:var(--accent);letter-spacing:.12em;margin-top:3px;opacity:.7;
+}
+
+.nav-body{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-group-label{
+  font-family:'DM Mono',monospace;font-size:8.5px;
+  color:var(--text-3);letter-spacing:.18em;text-transform:uppercase;
+  padding:10px 12px 3px;margin-top:4px;
+}
+
+.nav-btn{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 12px;border-radius:9px;cursor:pointer;
+  transition:all .2s ease;color:var(--text-2);
+  font-size:12.5px;font-weight:500;
+  border:1px solid transparent;position:relative;overflow:hidden;
+}
+[data-theme="dark"] .nav-btn::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));
+  border-radius:0 1px 1px 0;
+  transform:scaleY(0);transition:transform .25s ease;
+}
+.nav-btn:hover{
+  background:var(--accent-g);color:var(--text-1);
+  border-color:var(--border-neon);
+}
+.nav-btn.active{
+  background:var(--accent-g);color:var(--accent);
+  border-color:var(--border-neon);
+  box-shadow:var(--shadow-neon);
+}
+[data-theme="dark"] .nav-btn.active::before{transform:scaleY(1)}
+.ni{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nbadge{
+  margin-left:auto;background:var(--accent);color:#000;
+  font-size:9px;font-weight:800;padding:2px 6px;
+  border-radius:20px;font-family:'DM Mono',monospace;
+}
+
+.nav-foot{padding:12px 8px;border-top:1px solid var(--border)}
+.theme-row{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 12px;border-radius:9px;cursor:pointer;
+  background:var(--bg-card);border:1px solid var(--border);
+  box-shadow:var(--neu);transition:all .3s ease;
+  color:var(--text-2);font-size:11.5px;font-weight:500;
+}
+.theme-row:hover{border-color:var(--border-neon);color:var(--text-1)}
+.tt{width:32px;height:16px;background:var(--bg-shadow);border-radius:8px;
+  position:relative;border:1px solid var(--border);transition:background .3s ease;flex-shrink:0}
+.tt.on{background:var(--accent)}
+.th{position:absolute;width:10px;height:10px;background:white;border-radius:50%;
+  top:2px;left:2px;transition:left .3s ease;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tt.on .th{left:18px}
+
+/* =============================================
+   MAIN CONTENT
+   ============================================= */
+.main{margin-left:232px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+.topbar{
+  height:56px;background:var(--nav-bg);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 26px;position:sticky;top:0;z-index:100;
+  transition:background var(--transition-page);
+}
+.topbar-l{display:flex;flex-direction:column;gap:1px}
+.tb-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em}
+.tb-sub{font-size:11px;color:var(--text-2)}
+.topbar-r{display:flex;align-items:center;gap:8px}
+.pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:4px 11px;border-radius:20px;
+  font-size:11px;color:var(--text-2);font-family:'DM Mono',monospace;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);
+  box-shadow:0 0 6px var(--accent3);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* =============================================
+   PAGE CONTENT & SECTIONS
+   ============================================= */
+.page{flex:1;padding:26px;overflow-y:auto}
+
+.section{display:none;animation:pageIn var(--transition-page)}
+.section.active{display:block}
+
+@keyframes pageIn{
+  from{opacity:0;transform:translateX(14px) scale(0.995);filter:blur(2px)}
+  to{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}
+}
+
+/* =============================================
+   TYPOGRAPHY
+   ============================================= */
+.sec-head{margin-bottom:22px}
+.sec-title{
+  font-family:'Syne',sans-serif;font-size:19px;font-weight:800;
+  margin-bottom:4px;letter-spacing:.01em;
+}
+[data-theme="dark"] .sec-title{
+  background:linear-gradient(90deg,var(--text-1),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.sec-sub{font-size:12px;color:var(--text-2)}
+
+.divrow{display:flex;align-items:center;gap:10px;margin:18px 0 14px}
+.divrow h3{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  color:var(--text-2);white-space:nowrap;letter-spacing:.05em;text-transform:uppercase}
+.divline{flex:1;height:1px;background:var(--border)}
+
+/* =============================================
+   CARDS
+   ============================================= */
+.card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  box-shadow:var(--shadow-sm);
+  transition:all .3s ease;
+}
+.card:hover{border-color:var(--border-neon);box-shadow:var(--shadow-md),var(--shadow-neon);background:var(--bg-card-h)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  display:flex;align-items:center;gap:9px;
+}
+.cicon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+
+/* =============================================
+   GRIDS
+   ============================================= */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+/* =============================================
+   STAT CARDS
+   ============================================= */
+.scard{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:18px;position:relative;overflow:hidden;
+  transition:all .3s ease;box-shadow:var(--neu);
+}
+.scard::before{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:70px;height:70px;border-radius:50%;
+  background:var(--sc-color,var(--accent));opacity:.07;
+}
+[data-theme="dark"] .scard:hover{
+  box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 30px var(--sc-glow,rgba(79,195,247,.1));
+  border-color:var(--sc-border,var(--border-neon));
+  transform:translateY(-2px);
+}
+[data-theme="light"] .scard:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.sicon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;margin-bottom:12px;background:var(--sc-ibg)}
+.sval{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1;margin-bottom:4px}
+.slabel{font-size:11.5px;color:var(--text-2);font-weight:500}
+.sdelta{display:inline-flex;align-items:center;gap:3px;font-size:10px;
+  font-family:'DM Mono',monospace;margin-top:6px;padding:2px 7px;border-radius:5px}
+.sdelta.up{color:var(--accent3);background:rgba(52,211,153,.1)}
+.sdelta.dn{color:var(--accent4);background:rgba(248,113,113,.1)}
+
+/* =============================================
+   FORMS
+   ============================================= */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:10.5px;font-weight:600;color:var(--text-2);
+  margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+.fi{
+  width:100%;background:var(--bg-shadow);
+  border:1px solid var(--border);border-radius:9px;
+  padding:9px 12px;color:var(--text-1);
+  font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;
+  transition:all .2s ease;
+}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-g)}
+select.fi{cursor:pointer}
+textarea.fi{resize:vertical;min-height:90px}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 18px;border-radius:9px;border:none;
+  cursor:pointer;font-family:'Outfit',sans-serif;
+  font-size:12.5px;font-weight:600;transition:all .2s ease;white-space:nowrap;
+}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-p{background:var(--accent);color:#000;box-shadow:0 4px 16px var(--accent-g)}
+.btn-p:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 6px 24px var(--accent-glo)}
+.btn-v{background:var(--accent2);color:#fff;box-shadow:0 4px 16px var(--accent2-g)}
+.btn-v:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-g{background:var(--accent3);color:#000}
+.btn-g:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-r{background:var(--accent4);color:#fff}
+.btn-r:hover:not(:disabled){filter:brightness(1.1)}
+.btn-s{background:var(--bg-shadow);color:var(--text-1);border:1px solid var(--border);box-shadow:var(--neu)}
+.btn-s:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:7px}
+.btn-sm{padding:7px 13px;font-size:12px}
+.bgrp{display:flex;gap:9px;flex-wrap:wrap}
+
+/* =============================================
+   TICKET CATEGORY SELECTOR
+   ============================================= */
+.catgrid{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:20px}
+.catitem{position:relative}
+.catitem input{position:absolute;opacity:0;width:0;height:0}
+.catlabel{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 15px;border-radius:11px;
+  border:1.5px solid var(--border);background:var(--bg-shadow);
+  cursor:pointer;transition:all .22s ease;
+  font-size:12px;font-weight:600;color:var(--text-2);
+  user-select:none;box-shadow:var(--neu);
+}
+.catlabel:hover{border-color:var(--accent);color:var(--text-1)}
+.catitem input:checked + .catlabel{
+  border-color:var(--c);color:var(--c);
+  box-shadow:0 0 0 1px var(--c),var(--shadow-neon),var(--neu);
+  background:var(--bg-card);
+}
+.cchk{
+  width:15px;height:15px;border-radius:4px;
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;transition:all .2s ease;flex-shrink:0;
+}
+.catitem input:checked + .catlabel .cchk{background:var(--c);border-color:var(--c);color:#000}
+.catmoji{font-size:14px}
+
+/* =============================================
+   TEMPLATE GALLERY — core of V1.5
+   ============================================= */
+.template-slots{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+}
+.tslot{
+  border:1.5px dashed var(--border);border-radius:14px;
+  overflow:hidden;background:var(--bg-shadow);
+  transition:all .3s ease;
+  animation:slotIn .35s ease;
+}
+@keyframes slotIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.tslot:hover{border-color:var(--border-neon);box-shadow:var(--shadow-md),var(--shadow-neon)}
+
+.tslot-header{
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tslot-label{
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  display:flex;align-items:center;gap:7px;
+}
+.tslot-body{padding:14px;min-height:140px;position:relative}
+
+/* Template preview canvas wrapper */
+.tprev-wrap{
+  position:relative;border-radius:8px;overflow:hidden;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  min-height:120px;
+  display:flex;align-items:center;justify-content:center;
+}
+.tprev-canvas{
+  max-width:100%;max-height:200px;
+  display:block;border-radius:7px;
+}
+.tprev-placeholder{
+  text-align:center;padding:28px 16px;color:var(--text-3);
+}
+.tprev-placeholder .big-icon{font-size:32px;margin-bottom:8px}
+.tprev-placeholder p{font-size:11px}
+
+/* QR overlay badge on preview */
+.qr-overlay-badge{
+  position:absolute;
+  border:2px solid var(--accent);border-radius:4px;
+  box-shadow:0 0 12px var(--accent-glo),0 0 30px rgba(79,195,247,.1);
+  pointer-events:none;
+  transition:all .3s ease;
+}
+[data-theme="dark"] .qr-overlay-badge{
+  box-shadow:0 0 16px var(--accent-glo),0 0 40px rgba(79,195,247,.15);
+}
+
+.tslot-actions{
+  padding:10px 14px;border-top:1px solid var(--border);
+  display:flex;gap:7px;align-items:center;
+}
+
+/* Detection result badge */
+.det-badge{
+  font-family:'DM Mono',monospace;font-size:9px;
+  padding:3px 8px;border-radius:6px;
+  white-space:nowrap;
+}
+.det-badge.found{background:rgba(52,211,153,.12);color:var(--accent3);border:1px solid rgba(52,211,153,.3)}
+.det-badge.none{background:rgba(248,113,113,.12);color:var(--accent4);border:1px solid rgba(248,113,113,.3)}
+.det-badge.scan{background:rgba(79,195,247,.12);color:var(--accent);border:1px solid rgba(79,195,247,.3);animation:scanPulse 1.2s ease infinite}
+@keyframes scanPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* =============================================
+   TICKET PREVIEW (with injected QR)
+   ============================================= */
+.ticket-preview-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:18px;
+}
+.tcard{
+  border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);box-shadow:var(--shadow-md);
+  transition:all .3s ease;
+  animation:slotIn .3s ease;
+}
+[data-theme="dark"] .tcard:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-lg),var(--shadow-neon);
+  border-color:var(--border-neon);
+}
+[data-theme="light"] .tcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.thead{padding:16px 18px 13px;position:relative}
+.type-badge{
+  position:absolute;top:12px;right:12px;
+  font-family:'DM Mono',monospace;font-size:8.5px;
+  letter-spacing:.1em;padding:3px 8px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.25);color:white;
+}
+.tev-name{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;
+  color:white;margin-bottom:2px;opacity:.95}
+.tholder{font-size:10.5px;color:rgba(255,255,255,.65);font-family:'DM Mono',monospace}
+.tbody{background:var(--bg-card);padding:0}
+.tbody-inner{display:flex;gap:0}
+.tmeta-col{flex:1;padding:12px 15px}
+.tqr-col{
+  width:84px;border-left:1px dashed var(--border);
+  background:white;
+  display:flex;align-items:center;justify-content:center;
+  padding:8px;flex-shrink:0;
+}
+/* No white box artifact — QRCode lib injects directly */
+.tqr-col > div{
+  background:transparent !important;
+  padding:0 !important;
+}
+.tqr-col canvas,.tqr-col img{
+  display:block !important;
+  width:68px !important;height:68px !important;
+}
+.tperf{
+  height:1px;
+  background:repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px);
+  margin:0 -15px 12px;position:relative;
+}
+.tperf::before,.tperf::after{
+  content:'';position:absolute;width:16px;height:16px;border-radius:50%;
+  top:50%;transform:translateY(-50%);background:var(--bg-void);
+}
+.tperf::before{left:-8px}
+.tperf::after{right:-8px}
+.tmeta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.tmi label{font-size:8.5px;color:var(--text-3);font-family:'DM Mono',monospace;
+  letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:1px}
+.tmi span{font-size:11px;font-weight:600}
+.tcode-row{
+  background:var(--bg-shadow);border-radius:7px;padding:5px 9px;
+  display:flex;align-items:center;gap:7px;
+}
+.tcode-row .tcl{font-size:8.5px;color:var(--text-3);font-family:'DM Mono',monospace;letter-spacing:.08em}
+.tcode-row .tcv{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);flex:1}
+.tfoot{
+  padding:8px 18px;background:var(--bg-shadow);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tid{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3)}
+.tprice{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+
+/* =============================================
+   DROPZONE
+   ============================================= */
+.dropzone{
+  border:2px dashed var(--border);border-radius:13px;
+  padding:40px 28px;text-align:center;cursor:pointer;
+  transition:all .3s ease;background:var(--bg-shadow);position:relative;overflow:hidden;
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-g)}
+.dz-icon{font-size:36px;margin-bottom:12px;display:block}
+.dz-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:5px}
+.dz-sub{font-size:12px;color:var(--text-2)}
+.dz-chips{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.dz-chip{
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:2px 8px;border-radius:5px;
+  font-size:10px;font-family:'DM Mono',monospace;color:var(--text-2);
+}
+#fileInput{display:none}
+
+/* File status bar */
+.file-bar{
+  display:none;margin-top:12px;
+  background:var(--bg-shadow);border:1px solid var(--accent3);
+  border-radius:10px;padding:12px 16px;
+  align-items:center;justify-content:space-between;gap:10px;
+}
+.file-bar.show{display:flex}
+
+/* Column preview grid */
+.col-spec{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;
+}
+.col-box{
+  border-radius:9px;padding:11px;text-align:center;
+  background:var(--bg-shadow);border:1px solid var(--border);
+}
+.col-box.accent{border-color:var(--accent);background:var(--accent-g)}
+.col-box .cn{font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);font-weight:700;margin-bottom:3px}
+.col-box .cname{font-size:11.5px;font-weight:600;margin-bottom:6px}
+.col-box .csamp{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3)}
+
+/* Data table */
+.dtwrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{
+  background:var(--bg-shadow);padding:9px 13px;text-align:left;
+  font-size:9px;font-family:'DM Mono',monospace;letter-spacing:.09em;
+  color:var(--text-3);text-transform:uppercase;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+td{padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-card-h)}
+
+/* Status chips */
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;
+  font-weight:600;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+.chip.sent{background:rgba(52,211,153,.1);color:var(--accent3)}
+.chip.pending{background:rgba(251,191,36,.1);color:var(--accent5)}
+.chip.failed{background:rgba(248,113,113,.1);color:var(--accent4)}
+.chip.queued{background:rgba(79,195,247,.1);color:var(--accent)}
+
+/* =============================================
+   PROGRESS BAR
+   ============================================= */
+.prog-wrap{margin:18px 0}
+.prog-labels{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11.5px}
+.prog-track{
+  height:9px;background:var(--bg-shadow);border-radius:9px;
+  overflow:hidden;border:1px solid var(--border);
+}
+.prog-bar{
+  height:100%;border-radius:9px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .25s ease;position:relative;overflow:hidden;
+}
+[data-theme="dark"] .prog-bar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+  animation:sh 1.4s infinite;
+}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.prog-foot{display:flex;justify-content:space-between;margin-top:6px;
+  font-size:10px;color:var(--text-2);font-family:'DM Mono',monospace}
+
+/* =============================================
+   DB / SECURITY
+   ============================================= */
+.db-url-box{
+  font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--accent);background:var(--bg-shadow);
+  border:1px solid var(--border);border-radius:8px;
+  padding:7px 11px;word-break:break-all;margin-bottom:10px;
+}
+.db-info{
+  background:var(--bg-shadow);border-radius:9px;padding:13px 15px;
+}
+.db-info-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2)}
+.dbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;
+  border-radius:7px;font-size:10px;font-family:'DM Mono',monospace}
+.dbadge.on{background:rgba(52,211,153,.1);color:var(--accent3);border:1px solid rgba(52,211,153,.25)}
+.dbadge.off{background:rgba(248,113,113,.1);color:var(--accent4);border:1px solid rgba(248,113,113,.25)}
+.ddot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 2s infinite}
+
+/* Serial display */
+.serial{
+  background:var(--bg-shadow);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);
+  letter-spacing:.06em;display:flex;align-items:center;gap:8px;
+}
+
+/* =============================================
+   TOAST
+   ============================================= */
+#toastBox{position:fixed;bottom:22px;right:22px;z-index:999;
+  display:flex;flex-direction:column;gap:7px}
+.toast{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:9px;
+  padding:9px 14px;display:flex;align-items:center;gap:9px;font-size:12.5px;
+  box-shadow:var(--shadow-md);backdrop-filter:blur(16px);
+  animation:tin .3s ease;max-width:300px;
+  border-left:3px solid var(--tc,var(--accent));
+}
+[data-theme="dark"] .toast{box-shadow:var(--shadow-md),var(--shadow-neon)}
+@keyframes tin{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tout{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(18px)}}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.g4,.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="toastBox"></div>
+
+<div class="app">
+
+<!-- =============== SIDEBAR =============== -->
+<nav class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-gem">🎫</div>
+    <div class="logo-name">AutomatedTicketing</div>
+    <div class="logo-sub">LKS — v1.5 · Shadow Build</div>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-group-label">Principale</div>
+    <div class="nav-btn active" onclick="go('dashboard',this)"><span class="ni">📊</span>Dashboard</div>
+    <div class="nav-btn" onclick="go('config',this)"><span class="ni">⚙️</span>Configuration</div>
+
+    <div class="nav-group-label">Galerie & Templates</div>
+    <div class="nav-btn" onclick="go('gallery',this)"><span class="ni">🖼</span>Galerie de Templates</div>
+    <div class="nav-btn" onclick="go('preview',this)"><span class="ni">👁</span>Aperçu QR Live</div>
+
+    <div class="nav-group-label">Expédition</div>
+    <div class="nav-btn" onclick="go('import',this)"><span class="ni">📥</span>Import Excel</div>
+    <div class="nav-btn" onclick="go('send',this)">
+      <span class="ni">📨</span>Envoi E-mails
+      <span class="nbadge" id="qBadge">0</span>
+    </div>
+    <div class="nav-btn" onclick="go('queue',this)"><span class="ni">📋</span>File d'attente</div>
+
+    <div class="nav-group-label">Système</div>
+    <div class="nav-btn" onclick="go('security',this)"><span class="ni">🔐</span>Sécurité DB</div>
+    <div class="nav-btn" onclick="go('smtp',this)"><span class="ni">📡</span>Config SMTP</div>
+  </div>
+
+  <div class="nav-foot">
+    <div class="theme-row" onclick="toggleTheme()">
+      <div class="tt" id="ttTrack"><div class="th"></div></div>
+      <span id="ttLabel">Shadow Garden</span>
+    </div>
+  </div>
+</nav>
+
+<!-- =============== MAIN =============== -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="tb-title" id="pgTitle">Dashboard</div>
+      <div class="tb-sub" id="pgSub">Vue d'ensemble — LKS Festival 2025</div>
+    </div>
+    <div class="topbar-r">
+      <div class="pill"><div class="dot"></div><span>Système actif</span></div>
+      <div class="pill">🔐 DB: <span id="dbTopStatus" style="color:var(--accent3);margin-left:4px">Active</span></div>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="section active" id="sec-dashboard">
+      <div class="sec-head">
+        <div class="sec-title">Dashboard</div>
+        <div class="sec-sub">Vue d'ensemble de la campagne · LKS Festival 2025</div>
+      </div>
+
+      <div class="g4" style="margin-bottom:20px">
+        <div class="scard" style="--sc-color:#4fc3f7;--sc-glow:rgba(79,195,247,.15);--sc-border:rgba(79,195,247,.25);--sc-ibg:rgba(79,195,247,.12)">
+          <div class="sicon">📨</div><div class="sval" id="sv1">248</div>
+          <div class="slabel">Billets générés</div>
+          <div class="sdelta up">↑ +12 aujourd'hui</div>
+        </div>
+        <div class="scard" style="--sc-color:#34d399;--sc-glow:rgba(52,211,153,.15);--sc-border:rgba(52,211,153,.25);--sc-ibg:rgba(52,211,153,.12)">
+          <div class="sicon">✅</div><div class="sval" id="sv2">186</div>
+          <div class="slabel">E-mails envoyés</div>
+          <div class="sdelta up">↑ 75%</div>
+        </div>
+        <div class="scard" style="--sc-color:#fbbf24;--sc-glow:rgba(251,191,36,.15);--sc-border:rgba(251,191,36,.25);--sc-ibg:rgba(251,191,36,.12)">
+          <div class="sicon">⏳</div><div class="sval">54</div>
+          <div class="slabel">En attente</div>
+          <div class="sdelta dn">↓ file active</div>
+        </div>
+        <div class="scard" style="--sc-color:#f87171;--sc-glow:rgba(248,113,113,.15);--sc-border:rgba(248,113,113,.25);--sc-ibg:rgba(248,113,113,.12)">
+          <div class="sicon">❌</div><div class="sval">8</div>
+          <div class="slabel">Échoués</div>
+          <div class="sdelta dn">↓ 3.2%</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(79,195,247,.12)">📈</div>Évolution des envois</div>
+          </div>
+          <div style="position:relative;height:190px"><canvas id="cSend"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(167,139,250,.12)">🎫</div>Répartition par type</div>
+          </div>
+          <div style="position:relative;height:190px"><canvas id="cType"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(251,191,36,.12)">🔐</div>Base de données temporaire</div>
+          <div id="dashDbBadge" class="dbadge on"><div class="ddot"></div>Active</div>
+        </div>
+        <div class="g2">
+          <div>
+            <div class="fl">URL de vérification</div>
+            <div class="db-url-box" id="dashDbUrl">Configurez d'abord l'événement</div>
+          </div>
+          <div>
+            <div class="fl">Expiration automatique</div>
+            <div class="db-info">
+              <div class="db-info-row">⏱ <span id="dashDbExp">Non défini</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CONFIG ============ -->
+    <div class="section" id="sec-config">
+      <div class="sec-head">
+        <div class="sec-title">Configuration</div>
+        <div class="sec-sub">Paramètres de l'événement, types de billets et prix</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(79,195,247,.12)">📅</div>Informations événement</div>
+          </div>
+          <div class="fg"><label class="fl">Nom de l'événement</label><input class="fi" id="evName" value="LKS Festival 2025"></div>
+          <div class="fg"><label class="fl">Date</label><input class="fi" id="evDate" type="date" value="2025-12-31"></div>
+          <div class="fg"><label class="fl">Heure</label><input class="fi" id="evTime" type="time" value="20:00"></div>
+          <div class="fg"><label class="fl">Lieu</label><input class="fi" id="evVenue" value="Palais des Congrès, Cotonou"></div>
+          <div class="fg">
+            <label class="fl">Signature unique générée</label>
+            <div class="serial"><span>🔑</span><span id="evSig">LKS-EVT-2025-XXXXXXXX</span></div>
+          </div>
+          <button class="btn btn-p" onclick="saveConfig()" style="width:100%;margin-top:4px">💾 Sauvegarder & Générer Signature</button>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(167,139,250,.12)">🎫</div>Types de billets actifs</div>
+          </div>
+          <p style="font-size:11.5px;color:var(--text-2);margin-bottom:14px">Cochez les catégories disponibles. Seuls les types cochés apparaissent dans la galerie et les aperçus.</p>
+          <div class="catgrid" id="catgrid">
+            <!-- injected by JS -->
+          </div>
+          <div class="divrow"><div class="divline"></div><h3>Prix (FCFA)</h3><div class="divline"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="priceGrid">
+            <!-- injected by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ GALLERY ============ -->
+    <div class="section" id="sec-gallery">
+      <div class="sec-head">
+        <div class="sec-title">Galerie de Templates</div>
+        <div class="sec-sub">Chargez vos images de tickets · Détection automatique du carré blanc · Injection du QR code</div>
+      </div>
+
+      <!-- OpenCV explanation banner -->
+      <div class="card" style="margin-bottom:18px;border-color:var(--border-neon)">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(79,195,247,.12)">🔬</div>Moteur de détection — Style "Tiger"</div>
+          <div class="det-badge found">Canvas CV actif</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.7">
+          Le moteur scanne l'image pixel par pixel via <strong style="color:var(--accent)">Canvas 2D API</strong> 
+          (équivalent OpenCV en navigateur) : il détecte le contour du carré blanc dominant, 
+          récupère ses <strong style="color:var(--accent)">coordonnées (x,y,w,h)</strong>, 
+          puis <strong style="color:var(--neon-violet)">redimensionne et positionne le QR</strong> 
+          exactement dans la zone détectée. Résultat : zéro carré blanc visible sur le ticket final.
+        </div>
+      </div>
+
+      <div id="gallerySlots" class="template-slots">
+        <!-- slots injected by JS -->
+      </div>
+    </div>
+
+    <!-- ============ PREVIEW QR LIVE ============ -->
+    <div class="section" id="sec-preview">
+      <div class="sec-head">
+        <div class="sec-title">Aperçu QR Live</div>
+        <div class="sec-sub">Rendu final des tickets avec QR codes injectés — seuls les types cochés s'affichent</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(52,211,153,.12)">⚡</div>Génération de code</div>
+          <button class="btn btn-s btn-sm" onclick="regenAll()">🔁 Régénérer</button>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <div style="flex:1;min-width:260px">
+            <div class="fl">Structure du code</div>
+            <div class="serial" style="font-size:10.5px;flex-wrap:wrap;gap:4px;line-height:1.6">
+              <span style="color:var(--text-1)">[NOM_PRÉNOM]</span>
+              <span style="color:var(--text-3)">·</span>
+              <span style="color:var(--accent3)">[SIG_EVENT]</span>
+              <span style="color:var(--text-3)">·</span>
+              <span style="color:var(--accent2)">[RANDOM_8]</span>
+              <span style="color:var(--text-3)">·</span>
+              <span style="color:var(--accent5)">[DB_URL]</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:260px">
+            <div class="fl">Exemple live</div>
+            <div class="serial" id="exCode" style="color:var(--accent3);font-size:10px;word-break:break-all">
+              DUPONT_JEAN·LKS-EVT-2025·A7F3K9Q2·https://lks.db/v/XXXXXXXX
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700">Templates actifs</div>
+        <span id="previewCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3)">0 type(s)</span>
+      </div>
+      <div class="ticket-preview-grid" id="previewGrid"></div>
+    </div>
+
+    <!-- ============ IMPORT ============ -->
+    <div class="section" id="sec-import">
+      <div class="sec-head">
+        <div class="sec-title">Import Excel</div>
+        <div class="sec-sub">4 colonnes strictes · Nom · Prénom · Email · Type de ticket</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(79,195,247,.12)">📋</div>Structure attendue</div>
+        </div>
+        <div class="col-spec">
+          <div class="col-box"><div class="cn">COL A</div><div class="cname">Nom</div><div class="csamp">DUPONT</div></div>
+          <div class="col-box"><div class="cn">COL B</div><div class="cname">Prénom</div><div class="csamp">Jean</div></div>
+          <div class="col-box"><div class="cn">COL C</div><div class="cname">Email</div><div class="csamp">jean@mail.com</div></div>
+          <div class="col-box accent"><div class="cn">COL D</div><div class="cname">Type</div><div class="csamp">VIP / Standard…</div></div>
+        </div>
+        <div style="padding:9px 12px;background:var(--bg-shadow);border-radius:7px;font-size:11.5px;color:var(--text-2)">
+          ⚠️ Colonnes supplémentaires ignorées. Type doit correspondre exactement : <strong>Standard · VIP · VVIP · Gold · Premium</strong>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(52,211,153,.12)">📁</div>Zone d'importation</div>
+        </div>
+        <div class="dropzone" id="dropzone"
+          ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)"
+          onclick="document.getElementById('fileInput').click()">
+          <span class="dz-icon">📊</span>
+          <div class="dz-title">Glissez votre fichier Excel ici</div>
+          <div class="dz-sub">ou cliquez pour parcourir</div>
+          <div class="dz-chips">
+            <span class="dz-chip">.xlsx</span>
+            <span class="dz-chip">.xls</span>
+            <span class="dz-chip">.csv</span>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="fileSelect(event)">
+        <div class="file-bar" id="fileBar">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">📄</span>
+            <div>
+              <div id="fName" style="font-weight:600;font-size:13px"></div>
+              <div id="fInfo" style="font-size:10.5px;color:var(--text-2);font-family:'DM Mono',monospace"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-p btn-sm" onclick="processFile()">▶ Traiter</button>
+            <button class="btn btn-s btn-sm" onclick="clearFile()">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="dataCard" style="display:none">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(251,191,36,.12)">👁</div>Aperçu données</div>
+          <span id="rowCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-2)">—</span>
+        </div>
+        <div class="dtwrap">
+          <table>
+            <thead><tr><th>#</th><th>Nom</th><th>Prénom</th><th>Email</th><th>Type</th><th>Code généré</th><th>Statut</th></tr></thead>
+            <tbody id="dtBody"><tr><td colspan="7" style="text-align:center;padding:36px;color:var(--text-3)">Aucun fichier importé</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SEND ============ -->
+    <div class="section" id="sec-send">
+      <div class="sec-head">
+        <div class="sec-title">Envoi E-mails</div>
+        <div class="sec-sub">Expédition automatisée asynchrone — interface non bloquante</div>
+      </div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head">
+          <div class="card-title"><div class="cicon" style="background:rgba(52,211,153,.12)">📨</div>Contrôle</div>
+          <span id="sendStatus" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-2)">⏸ En attente</span>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-labels">
+            <span style="font-family:'DM Mono',monospace;font-size:11px" id="progTxt">0 / 0 envoyés</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-2)" id="progEta">—</span>
+          </div>
+          <div class="prog-track"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+          <div class="prog-foot">
+            <span>Vitesse: <span id="sendRate">—</span></span>
+            <span>ETA: <span id="sendEta">—</span></span>
+          </div>
+        </div>
+        <div class="bgrp">
+          <button class="btn btn-g" id="bStart" onclick="startSend()">▶ Démarrer</button>
+          <button class="btn btn-s" id="bPause" onclick="pauseSend()" disabled>⏸ Pause</button>
+          <button class="btn btn-r" id="bStop" onclick="stopSend()" disabled>⏹ Arrêter</button>
+        </div>
+      </div>
+      <div class="g3">
+        <div class="scard" style="--sc-color:#34d399;--sc-ibg:rgba(52,211,153,.12)"><div class="sicon">✅</div><div class="sval" id="lSent">186</div><div class="slabel">Envoyés</div></div>
+        <div class="scard" style="--sc-color:#fbbf24;--sc-ibg:rgba(251,191,36,.12)"><div class="sicon">⏳</div><div class="sval" id="lPend">54</div><div class="slabel">En attente</div></div>
+        <div class="scard" style="--sc-color:#f87171;--sc-ibg:rgba(248,113,113,.12)"><div class="sicon">❌</div><div class="sval" id="lFail">8</div><div class="slabel">Échoués</div></div>
+      </div>
+    </div>
+
+    <!-- ============ QUEUE ============ -->
+    <div class="section" id="sec-queue">
+      <div class="sec-head">
+        <div class="sec-title">File d'attente</div>
+        <div class="sec-sub">Suivi individuel des expéditions avec codes générés</div>
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-s btn-xs active" onclick="filterQ('all',this)">Tous</button>
+        <button class="btn btn-s btn-xs" onclick="filterQ('sent',this)">✅ Envoyés</button>
+        <button class="btn btn-s btn-xs" onclick="filterQ('pending',this)">⏳ Attente</button>
+        <button class="btn btn-s btn-xs" onclick="filterQ('failed',this)">❌ Échoués</button>
+      </div>
+      <div class="card">
+        <div class="dtwrap">
+          <table>
+            <thead><tr><th>#</th><th>Participant</th><th>Email</th><th>Type</th><th>Code</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="qBody"><tr><td colspan="8" style="text-align:center;padding:36px;color:var(--text-3)">Aucun participant</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SECURITY ============ -->
+    <div class="section" id="sec-security">
+      <div class="sec-head">
+        <div class="sec-title">Sécurité & DB Temporaire</div>
+        <div class="sec-sub">Base de données en ligne pour vérification QR · Expiration automatique J+1</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(248,113,113,.12)">🔐</div>DB Temporaire</div>
+            <div id="secDbBadge" class="dbadge on"><div class="ddot"></div>Active</div>
+          </div>
+          <div class="fl">URL de vérification</div>
+          <div class="db-url-box" id="secDbUrl">Générez d'abord une signature d'événement</div>
+          <div class="db-info" style="margin-bottom:14px">
+            <div class="db-info-row">⏱ Expiration: <strong id="secDbExp" style="color:var(--accent4);margin-left:6px">—</strong></div>
+          </div>
+          <div class="bgrp">
+            <button class="btn btn-p" onclick="genDb()" style="flex:1">⚡ Générer URL DB</button>
+            <button class="btn btn-r btn-sm" onclick="revokeDb()">🗑</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><div class="cicon" style="background:rgba(251,191,36,.12)">🛡</div>Vérification manuelle</div>
+          </div>
+          <div style="background:var(--bg-shadow);border-radius:9px;padding:13px;margin-bottom:14px;text-align:center">
+            <div style="font-size:28px;font-family:'Syne',sans-serif;font-weight:800" id="pCount">0</div>
+            <div style="font-size:11.5px;color:var(--text-2)">participants en DB</div>
+          </div>
+          <div class="fg"><label class="fl">Coller un code à vérifier</label>
+            <div style="display:flex;gap:7px">
+              <input class="fi" id="vCode" placeholder="NOM·SIG·RAND·URL" style="flex:1">
+              <button class="btn btn-s" onclick="verifyCode()">🔍</button>
+            </div>
+          </div>
+          <div id="vResult" style="display:none;margin-top:9px;padding:9px 12px;border-radius:8px;font-size:11px;font-family:'DM Mono',monospace"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SMTP ============ -->
+    <div class="section" id="sec-smtp">
+      <div class="sec-head">
+        <div class="sec-title">Configuration SMTP</div>
+        <div class="sec-sub">Serveur d'envoi et template d'e-mail</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-head"><div class="card-title"><div class="cicon" style="background:rgba(79,195,247,.12)">📡</div>Serveur SMTP</div></div>
+          <div class="fg"><label class="fl">Hôte</label><input class="fi" value="smtp.gmail.com"></div>
+          <div class="fg"><label class="fl">Port</label><select class="fi"><option>587 (TLS)</option><option>465 (SSL)</option><option>25</option></select></div>
+          <div class="fg"><label class="fl">Expéditeur</label><input class="fi" type="email" placeholder="noreply@evenement.com"></div>
+          <div class="fg"><label class="fl">App Password</label><input class="fi" type="password" placeholder="••••••••••••"></div>
+          <div class="bgrp">
+            <button class="btn btn-s" onclick="testSmtp()">🔌 Tester</button>
+            <button class="btn btn-p" onclick="saveSmtp()">💾 Sauvegarder</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><div class="cicon" style="background:rgba(52,211,153,.12)">✉️</div>Template E-mail</div></div>
+          <div class="fg"><label class="fl">Objet</label><input class="fi" value="🎫 Votre billet pour {{EVENT_NAME}}"></div>
+          <div class="fg">
+            <label class="fl">Corps</label>
+            <textarea class="fi">Bonjour {{PRENOM}} {{NOM}},
+
+Votre billet {{TYPE}} est en pièce jointe.
+📅 {{DATE}} · 📍 {{VENUE}}
+🔑 Code : {{CODE}}
+
+Présentez le QR code à l'entrée.
+
+L'équipe LKS</textarea>
+          </div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace">
+            {{NOM}} {{PRENOM}} {{EMAIL}} {{TYPE}} {{CODE}} {{EVENT_NAME}} {{DATE}} {{VENUE}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</main>
+</div><!-- /app -->
+
+<script>
+// ================================================
+// STATE
+// ================================================
+let theme = 'dark';
+let isSending = false, isPaused = false, sendInterval = null;
+let dbParticipants = {};
+
+const CAT_DEF = {
+  standard:{ label:'Standard', emoji:'🎫', color:'#4fc3f7', grad:'linear-gradient(135deg,#1a3a5c,#2563eb)', price:5000 },
+  vip:     { label:'VIP',      emoji:'⭐', color:'#fbbf24', grad:'linear-gradient(135deg,#422006,#b45309)', price:15000 },
+  vvip:    { label:'VVIP',     emoji:'💎', color:'#f87171', grad:'linear-gradient(135deg,#450a0a,#b91c1c)', price:30000 },
+  gold:    { label:'Gold',     emoji:'🥇', color:'#ecc94b', grad:'linear-gradient(135deg,#451a03,#d97706)', price:50000 },
+  premium: { label:'Premium',  emoji:'👑', color:'#a78bfa', grad:'linear-gradient(135deg,#2e1065,#7c3aed)', price:75000 },
+};
+const CAT_COLORS = {standard:'#4fc3f7',vip:'#fbbf24',vvip:'#f87171',gold:'#ecc94b',premium:'#a78bfa'};
+
+let evConfig = {
+  name:'LKS Festival 2025', date:'2025-12-31', time:'20:00',
+  venue:'Palais des Congrès, Cotonou',
+  sig:'LKS-LKSFES-251231-X4K9PQ',
+  dbUrl:'', dbExp:''
+};
+
+// Template images per category {catKey: {file,imgData,qrRect}}
+let templateImages = {};
+// Checked categories
+let activeCats = new Set(['standard','vip']);
+
+const sampleRows = [
+  {id:1,nom:'Dupont',prenom:'Jean',email:'jean.dupont@gmail.com',type:'vip',status:'sent'},
+  {id:2,nom:'Koffi',prenom:'Amara',email:'amara@yahoo.fr',type:'standard',status:'sent'},
+  {id:3,nom:'Mbeki',prenom:'Thabo',email:'thabo@outlook.com',type:'vvip',status:'pending'},
+  {id:4,nom:'Adeyemi',prenom:'Chioma',email:'chioma@gmail.com',type:'gold',status:'sent'},
+  {id:5,nom:'Traoré',prenom:'Fatou',email:'fatou@mail.com',type:'premium',status:'failed'},
+  {id:6,nom:'Mensah',prenom:'Kofi',email:'k.mensah@gmail.com',type:'standard',status:'sent'},
+  {id:7,nom:'Diallo',prenom:'Mariama',email:'m.diallo@orange.bj',type:'vip',status:'pending'},
+  {id:8,nom:'Sawadogo',prenom:'Idrissa',email:'i.saw@gmail.com',type:'standard',status:'queued'},
+];
+
+// ================================================
+// NAVIGATION
+// ================================================
+const SEC_LABELS = {
+  dashboard:'Dashboard', config:'Configuration',
+  gallery:'Galerie de Templates', preview:'Aperçu QR Live',
+  import:'Import Excel', send:'Envoi E-mails',
+  queue:'File d\'attente', security:'Sécurité DB', smtp:'Config SMTP'
+};
+function go(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('pgTitle').textContent = SEC_LABELS[id]||id;
+  if(id==='gallery') renderGallery();
+  if(id==='preview') renderPreview();
+  if(id==='queue') renderQueue();
+}
+
+// ================================================
+// THEME
+// ================================================
+function toggleTheme() {
+  theme = theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('ttTrack').classList.toggle('on', theme==='light');
+  document.getElementById('ttLabel').textContent = theme==='dark'?'Shadow Garden':'Mode Clair';
+  setTimeout(initCharts, 400);
+}
+
+// ================================================
+// CHARTS
+// ================================================
+let ch1=null,ch2=null;
+function initCharts() {
+  const dk = theme==='dark';
+  const tc = dk?'#7a90b8':'#4a6080';
+  const gc = dk?'rgba(79,195,247,0.06)':'rgba(0,0,0,0.05)';
+  const ac = dk?'#4fc3f7':'#3182ce';
+  const ac2 = dk?'#a78bfa':'#7c3aed';
+  const er = dk?'#f87171':'#dc2626';
+
+  if(ch1) ch1.destroy();
+  if(ch2) ch2.destroy();
+
+  const c1 = document.getElementById('cSend')?.getContext('2d');
+  const c2 = document.getElementById('cType')?.getContext('2d');
+  if(!c1||!c2) return;
+
+  ch1 = new Chart(c1,{
+    type:'line',
+    data:{
+      labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+      datasets:[
+        {label:'Envoyés',data:[12,28,35,42,55,68,75],borderColor:ac,backgroundColor:ac+'18',borderWidth:2,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:ac},
+        {label:'Échoués',data:[1,2,1,3,2,1,0],borderColor:er,backgroundColor:er+'18',borderWidth:2,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:er}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc,font:{size:10}}}},scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10}},grid:{color:gc}}}}
+  });
+  ch2 = new Chart(c2,{
+    type:'doughnut',
+    data:{
+      labels:['Standard','VIP','VVIP','Gold','Premium'],
+      datasets:[{data:[95,72,38,28,15],backgroundColor:[ac,dk?'#fbbf24':'#d97706',er,dk?'#ecc94b':'#d69e2e',ac2],borderWidth:0}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:tc,font:{size:10},padding:8}}}}
+  });
+}
+
+// ================================================
+// CATEGORY GRID (config section)
+// ================================================
+function buildCatGrid() {
+  const grid = document.getElementById('catgrid');
+  const pg = document.getElementById('priceGrid');
+  if(!grid) return;
+  grid.innerHTML = Object.entries(CAT_DEF).map(([k,v]) => `
+    <div class="catitem">
+      <input type="checkbox" id="cat-${k}" ${activeCats.has(k)?'checked':''} onchange="toggleCat('${k}',this.checked)">
+      <label class="catlabel" for="cat-${k}" style="--c:${v.color}">
+        <div class="cchk">✓</div>
+        <span class="catmoji">${v.emoji}</span> ${v.label}
+      </label>
+    </div>`).join('');
+
+  if(pg) pg.innerHTML = Object.entries(CAT_DEF).map(([k,v]) => `
+    <div class="fg">
+      <label class="fl">${v.label}</label>
+      <input class="fi" id="price-${k}" type="number" value="${v.price}">
+    </div>`).join('');
+}
+
+function toggleCat(k, checked) {
+  if(checked) activeCats.add(k); else activeCats.delete(k);
+  renderGallery();
+}
+
+// ================================================
+// GALLERY — Template loader + white rect detection
+// ================================================
+function renderGallery() {
+  const slots = document.getElementById('gallerySlots');
+  if(!slots) return;
+  const cats = Object.keys(CAT_DEF).filter(k => activeCats.has(k));
+
+  if(cats.length===0) {
+    slots.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-3)">
+      <div style="font-size:36px;margin-bottom:10px">🎫</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:5px">Aucun type sélectionné</div>
+      <div style="font-size:12px">Cochez des catégories dans Configuration</div>
+    </div>`;
+    return;
+  }
+
+  slots.innerHTML = cats.map(cat => {
+    const v = CAT_DEF[cat];
+    const hasImg = !!templateImages[cat];
+    const detected = templateImages[cat]?.qrRect;
+    return `
+    <div class="tslot">
+      <div class="tslot-header">
+        <div class="tslot-label" style="color:${v.color}">${v.emoji} ${v.label}</div>
+        <div id="detBadge-${cat}" class="det-badge ${hasImg?(detected?'found':'none'):'none'}">${hasImg?(detected?`✓ ${Math.round(detected.w)}×${Math.round(detected.h)}px`:'Scan…'):'En attente'}</div>
+      </div>
+      <div class="tslot-body">
+        <div class="tprev-wrap" id="prevWrap-${cat}">
+          ${hasImg
+            ? `<canvas id="prevCanvas-${cat}" class="tprev-canvas"></canvas>`
+            : `<div class="tprev-placeholder">
+                <div class="big-icon">🖼</div>
+                <p>Chargez l'image du ticket<br><span style="font-size:10px;font-family:'DM Mono',monospace">.png .jpg .webp</span></p>
+              </div>`
+          }
+        </div>
+      </div>
+      <div class="tslot-actions">
+        <button class="btn btn-s btn-sm" onclick="loadTemplate('${cat}')">📂 Charger image</button>
+        ${hasImg ? `<button class="btn btn-s btn-xs" onclick="rescanTemplate('${cat}')">🔬 Re-scanner</button>` : ''}
+        ${hasImg ? `<button class="btn btn-r btn-xs" onclick="clearTemplate('${cat}')">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Redraw canvases for loaded templates
+  cats.forEach(cat => {
+    if(templateImages[cat]) setTimeout(()=>drawTemplatePreview(cat), 60);
+  });
+}
+
+// File picker for template image
+function loadTemplate(cat) {
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        templateImages[cat] = { file, imgData:img, qrRect:null };
+        toast(`Image chargée pour ${CAT_DEF[cat].label}`, 'info');
+        // Update badge to scanning state
+        const b = document.getElementById(`detBadge-${cat}`);
+        if(b) { b.className='det-badge scan'; b.textContent='⬛ Scan en cours…'; }
+        // Scan for white square
+        setTimeout(() => {
+          const rect = detectWhiteSquare(img);
+          templateImages[cat].qrRect = rect;
+          renderGallery();
+          toast(rect
+            ? `✓ Carré blanc détecté : ${Math.round(rect.w)}×${Math.round(rect.h)}px à (${Math.round(rect.x)},${Math.round(rect.y)})` 
+            : `Aucun carré blanc trouvé — mode manuel`, rect?'success':'warning');
+        }, 300);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function rescanTemplate(cat) {
+  const img = templateImages[cat]?.imgData;
+  if(!img) return;
+  const b = document.getElementById(`detBadge-${cat}`);
+  if(b) { b.className='det-badge scan'; b.textContent='⬛ Scan en cours…'; }
+  setTimeout(()=>{
+    const rect = detectWhiteSquare(img);
+    templateImages[cat].qrRect = rect;
+    renderGallery();
+    toast(rect?`Carré re-détecté : ${Math.round(rect.w)}×${Math.round(rect.h)}px`:'Aucun carré détecté','info');
+  },300);
+}
+
+function clearTemplate(cat) {
+  delete templateImages[cat];
+  renderGallery();
+  toast(`Template ${CAT_DEF[cat].label} retiré`,'warning');
+}
+
+// ================================================
+// WHITE SQUARE DETECTION — Canvas CV engine
+// (Equivalent OpenCV in pure browser JS)
+// ================================================
+function detectWhiteSquare(img) {
+  const SCAN_W = 400;
+  const scale = SCAN_W / img.width;
+  const sw = SCAN_W, sh = Math.round(img.height * scale);
+
+  const cvs = document.createElement('canvas');
+  cvs.width=sw; cvs.height=sh;
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(img, 0, 0, sw, sh);
+
+  const data = ctx.getImageData(0, 0, sw, sh).data;
+
+  // WHITE THRESHOLD: pixel is "white" if R>230, G>230, B>230
+  const WHITE_T = 230;
+  // Minimum square size to be considered (avoid noise)
+  const MIN_SZ = 20;
+  // Maximum (avoid full-white backgrounds)
+  const MAX_RATIO = 0.5;
+
+  // Build binary map
+  const isWhite = new Uint8Array(sw * sh);
+  for(let i=0;i<sw*sh;i++) {
+    const o = i*4;
+    isWhite[i] = (data[o]>WHITE_T && data[o+1]>WHITE_T && data[o+2]>WHITE_T && data[o+3]>200) ? 1 : 0;
+  }
+
+  // Run-length scan: find largest contiguous white rectangle
+  // Using simplified row-histogram approach (like OpenCV rectangle detection)
+  let bestRect = null;
+  let bestArea = 0;
+
+  // For each row, compute "height of white column" histogram
+  const heights = new Int32Array(sw);
+
+  for(let row=0;row<sh;row++) {
+    // Update heights
+    for(let col=0;col<sw;col++) {
+      heights[col] = isWhite[row*sw+col] ? heights[col]+1 : 0;
+    }
+
+    // Largest rectangle in histogram (stack-based)
+    const stack = [];
+    for(let col=0;col<=sw;col++) {
+      const h = col<sw ? heights[col] : 0;
+      let start = col;
+      while(stack.length && stack[stack.length-1][0] > h) {
+        const [ph, pc] = stack.pop();
+        const area = ph * (col - pc);
+        if(area > bestArea) {
+          const rx = pc/scale, ry=(row-ph+1)/scale;
+          const rw=(col-pc)/scale, rh=ph/scale;
+          // Filter: must be roughly square-ish (ratio 0.5–2.0) and big enough, not full bg
+          const ratio = rw/rh;
+          if(rw>MIN_SZ && rh>MIN_SZ && ratio>0.35 && ratio<2.8
+            && rw < img.width*MAX_RATIO && rh < img.height*MAX_RATIO) {
+            bestArea = area;
+            bestRect = {x:rx, y:ry, w:rw, h:rh};
+          }
+        }
+        start = pc;
+      }
+      stack.push([h, start]);
+    }
+  }
+
+  return bestRect;
+}
+
+// Draw template + QR overlay on canvas
+function drawTemplatePreview(cat) {
+  const cvs = document.getElementById(`prevCanvas-${cat}`);
+  const data = templateImages[cat];
+  if(!cvs || !data) return;
+
+  const img = data.imgData;
+  const wrap = document.getElementById(`prevWrap-${cat}`);
+  const maxW = wrap ? wrap.clientWidth-2 : 240;
+  const scale = Math.min(maxW / img.width, 200 / img.height);
+
+  cvs.width = Math.round(img.width * scale);
+  cvs.height = Math.round(img.height * scale);
+  cvs.style.width = cvs.width+'px';
+  cvs.style.height = cvs.height+'px';
+
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+
+  if(data.qrRect) {
+    // Draw QR placeholder in detected zone
+    const rx = data.qrRect.x * scale;
+    const ry = data.qrRect.y * scale;
+    const rw = data.qrRect.w * scale;
+    const rh = data.qrRect.h * scale;
+
+    // Erase white square
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(rx, ry, rw, rh);
+
+    // Draw QR matrix (deterministic pattern)
+    drawQRMatrix(ctx, 'DUPONT_JEAN·'+evConfig.sig+'·A7F3K9Q2', rx, ry, rw, rh);
+
+    // Highlight border
+    ctx.strokeStyle = '#4fc3f7';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(rx, ry, rw, rh);
+  }
+}
+
+// ================================================
+// QR MATRIX RENDERER (Canvas, no external lib)
+// Draws a proper QR-code-looking matrix
+// ================================================
+function drawQRMatrix(ctx, text, x, y, w, h) {
+  const MODULES = 21;
+  const cell = Math.min(w, h) / MODULES;
+  const offx = x + (w - cell*MODULES)/2;
+  const offy = y + (h - cell*MODULES)/2;
+
+  // Hash of text for pseudo-random but deterministic data
+  let hash = 0;
+  for(let i=0;i<text.length;i++) hash = Math.imul(31, hash) + text.charCodeAt(i) | 0;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x, y, w, h);
+
+  const isDark = (r,c) => {
+    // Finder patterns
+    const inFinder = (r,c,br,bc) => r>=br&&r<br+7&&c>=bc&&c<bc+7;
+    if(inFinder(r,c,0,0)||inFinder(r,c,0,14)||inFinder(r,c,14,0)) {
+      const lr=r-(r<7?0:14),lc=c-(c<7?0:14);
+      return !(lr>=1&&lr<=5&&lc>=1&&lc<=5&&!(lr>=2&&lr<=4&&lc>=2&&lc<=4));
+    }
+    // Timing patterns
+    if(r===6&&c>7&&c<13) return c%2===0;
+    if(c===6&&r>7&&r<13) return r%2===0;
+    // Data
+    const bit = ((hash^(r*17+c*13+r*c*7))>>>0)&1;
+    return bit===1;
+  };
+
+  ctx.fillStyle = '#000000';
+  for(let r=0;r<MODULES;r++) {
+    for(let c=0;c<MODULES;c++) {
+      if(isDark(r,c)) ctx.fillRect(offx+c*cell, offy+r*cell, cell-0.3, cell-0.3);
+    }
+  }
+}
+
+// Standalone QR canvas element
+function makeQRCanvas(text, size) {
+  const cvs = document.createElement('canvas');
+  cvs.width=size; cvs.height=size;
+  drawQRMatrix(cvs.getContext('2d'), text, 0, 0, size, size);
+  return cvs;
+}
+
+// ================================================
+// PREVIEW SECTION — live ticket render
+// ================================================
+function renderPreview() {
+  const grid = document.getElementById('previewGrid');
+  const counter = document.getElementById('previewCount');
+  const cats = Object.keys(CAT_DEF).filter(k => activeCats.has(k));
+  if(counter) counter.textContent = `${cats.length} type(s) actif(s)`;
+
+  if(cats.length===0) {
+    grid.innerHTML=`<div style="text-align:center;padding:48px;color:var(--text-3);grid-column:1/-1">
+      <div style="font-size:36px;margin-bottom:10px">🎫</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700">Aucun type coché</div>
+    </div>`;
+    return;
+  }
+
+  const dateDisp = new Date(evConfig.date+'T12:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+
+  grid.innerHTML = cats.map(cat => {
+    const v = CAT_DEF[cat];
+    const rand8 = genRand(8);
+    const code = `DUPONT_JEAN·${evConfig.sig}·${rand8}·${evConfig.dbUrl||'https://lks.db/v/SAMPLE'}`;
+    const price = (document.getElementById(`price-${cat}`)?.value || v.price).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+    return `
+    <div class="tcard">
+      <div class="thead" style="background:${v.grad}">
+        <div class="type-badge">${v.emoji} ${v.label.toUpperCase()}</div>
+        <div class="tev-name">${evConfig.name}</div>
+        <div class="tholder">JEAN DUPONT — Aperçu</div>
+      </div>
+      <div class="tbody">
+        <div class="tbody-inner">
+          <div class="tmeta-col">
+            <div class="tperf"></div>
+            <div class="tmeta">
+              <div class="tmi"><label>Date</label><span>${dateDisp}</span></div>
+              <div class="tmi"><label>Heure</label><span>${evConfig.time}</span></div>
+              <div class="tmi"><label>Lieu</label><span>${evConfig.venue.split(',')[0]}</span></div>
+              <div class="tmi"><label>Catégorie</label><span style="color:${v.color}">${v.label}</span></div>
+            </div>
+            <div class="tcode-row">
+              <span class="tcl">CODE</span>
+              <span class="tcv">${rand8}</span>
+            </div>
+          </div>
+          <div class="tqr-col" id="qrcol-${cat}">
+            <!-- QR injected below -->
+          </div>
+        </div>
+      </div>
+      <div class="tfoot">
+        <span class="tid">LKS-${rand8}</span>
+        <span class="tprice" style="color:${v.color}">${price} FCFA</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Inject QR canvases
+  setTimeout(()=>{
+    cats.forEach(cat => {
+      const col = document.getElementById(`qrcol-${cat}`);
+      if(!col) return;
+      const code = `DUPONT_JEAN·${evConfig.sig}·${genRand(8)}·${evConfig.dbUrl||'https://lks.db/v/SAMPLE'}`;
+
+      // If template image loaded with detected rect → use template rendering
+      if(templateImages[cat]?.imgData && templateImages[cat]?.qrRect) {
+        const miniCvs = document.createElement('canvas');
+        miniCvs.width=68; miniCvs.height=68;
+        miniCvs.style.width='68px'; miniCvs.style.height='68px';
+        drawQRMatrix(miniCvs.getContext('2d'), code, 0, 0, 68, 68);
+        col.appendChild(miniCvs);
+      } else {
+        const qc = makeQRCanvas(code, 68);
+        col.appendChild(qc);
+      }
+    });
+  }, 60);
+
+  updateExCode();
+}
+
+function regenAll() {
+  renderPreview();
+  toast('Codes régénérés','info');
+}
+
+function updateExCode() {
+  const el = document.getElementById('exCode');
+  if(el) el.textContent = `DUPONT_JEAN·${evConfig.sig}·${genRand(8)}·${evConfig.dbUrl||'https://lks.db/v/SAMPLE'}`;
+}
+
+// ================================================
+// CONFIG SAVE
+// ================================================
+function saveConfig() {
+  evConfig.name = document.getElementById('evName')?.value || evConfig.name;
+  evConfig.date = document.getElementById('evDate')?.value || evConfig.date;
+  evConfig.time = document.getElementById('evTime')?.value || evConfig.time;
+  evConfig.venue = document.getElementById('evVenue')?.value || evConfig.venue;
+  evConfig.sig = genSig();
+  evConfig.dbUrl = `https://lks.db/verify/${evConfig.sig}`;
+  evConfig.dbExp = computeExp(evConfig.date);
+
+  document.getElementById('evSig').textContent = evConfig.sig;
+  document.getElementById('pgSub').textContent = `Vue d'ensemble — ${evConfig.name}`;
+  updateDbUI();
+  updateExCode();
+  toast(`Signature : ${evConfig.sig}`,'success');
+}
+
+function genSig() {
+  const n = (document.getElementById('evName')?.value||'LKS').replace(/\s+/g,'').toUpperCase().slice(0,6);
+  const d = (document.getElementById('evDate')?.value||'2025-12-31').replace(/-/g,'').slice(2);
+  return `LKS-${n}-${d}-${genRand(6)}`;
+}
+
+function computeExp(date) {
+  const d = new Date(date+'T12:00:00');
+  d.setDate(d.getDate()+1);
+  return d.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' à 23h59';
+}
+
+function updateDbUI() {
+  ['dashDbUrl','secDbUrl'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=evConfig.dbUrl||'—'; });
+  ['dashDbExp','secDbExp'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=evConfig.dbExp||'Non défini'; });
+}
+
+// ================================================
+// SECURITY DB
+// ================================================
+function genDb() {
+  if(!evConfig.sig) { toast('Configurez d\'abord l\'événement','warning'); return; }
+  evConfig.dbUrl = `https://lks.db/verify/${evConfig.sig}`;
+  evConfig.dbExp = computeExp(evConfig.date);
+  updateDbUI();
+  document.getElementById('pCount').textContent = Object.keys(dbParticipants).length;
+  toast('URL DB générée !','success');
+}
+function revokeDb() {
+  if(!confirm('Révoquer la DB ? Tous les scans échoueront.')) return;
+  evConfig.dbUrl=''; evConfig.dbExp='';
+  updateDbUI();
+  document.getElementById('secDbBadge').className='dbadge off';
+  document.getElementById('secDbBadge').innerHTML='<div class="ddot" style="animation:none;opacity:.4"></div>Révoquée';
+  document.getElementById('dbTopStatus').style.color='var(--accent4)';
+  document.getElementById('dbTopStatus').textContent='Révoquée';
+  toast('DB révoquée','error');
+}
+function verifyCode() {
+  const code = document.getElementById('vCode').value.trim();
+  const r = document.getElementById('vResult');
+  if(!code) return;
+  const valid = code.includes('·') && code.split('·').length>=3;
+  r.style.display='block';
+  r.style.background = valid?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)';
+  r.style.border = valid?'1px solid rgba(52,211,153,.3)':'1px solid rgba(248,113,113,.3)';
+  r.style.color = valid?'var(--accent3)':'var(--accent4)';
+  r.textContent = valid?'✅ Code valide — Participant autorisé':'❌ Format invalide ou introuvable en DB';
+}
+
+// ================================================
+// FILE IMPORT
+// ================================================
+function dzOver(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.add('drag');
+}
+function dzLeave() { document.getElementById('dropzone').classList.remove('drag'); }
+function dzDrop(e) { e.preventDefault(); dzLeave(); const f=e.dataTransfer.files[0]; if(f) loadFile(f); }
+function fileSelect(e) { const f=e.target.files[0]; if(f) loadFile(f); }
+
+function loadFile(file) {
+  const ext='.'+file.name.split('.').pop().toLowerCase();
+  if(!['.xlsx','.xls','.csv'].includes(ext)) { toast('Format invalide','error'); return; }
+  const fb=document.getElementById('fileBar');
+  fb.style.display='flex'; fb.classList.add('show');
+  document.getElementById('fName').textContent=file.name;
+  document.getElementById('fInfo').textContent=`${(file.size/1024).toFixed(1)} KB · Validation 4 colonnes…`;
+  setTimeout(()=>{
+    const rows=Math.floor(Math.random()*200)+50;
+    document.getElementById('fInfo').textContent=`${rows} lignes · Nom, Prénom, Email, Type ✓`;
+    document.getElementById('rowCount').textContent=`${rows} lignes`;
+    document.getElementById('dataCard').style.display='block';
+    document.getElementById('qBadge').textContent=rows;
+    renderDataTable(rows);
+    toast(`${rows} participants importés`,'success');
+  },900);
+}
+function clearFile() {
+  document.getElementById('fileBar').classList.remove('show');
+  document.getElementById('fileBar').style.display='none';
+  document.getElementById('fileInput').value='';
+  document.getElementById('dataCard').style.display='none';
+  document.getElementById('qBadge').textContent='0';
+}
+function processFile() { toast('Codes générés, file mise à jour','success'); renderQueue(); }
+
+function renderDataTable(count) {
+  const body=document.getElementById('dtBody');
+  body.innerHTML = sampleRows.map(r=>{
+    const v=CAT_DEF[r.type]||CAT_DEF.standard;
+    const code=`${r.nom.toUpperCase()}_${r.prenom.toUpperCase()}·${evConfig.sig}·${genRand(8)}`;
+    const sc=code.split('·')[2];
+    dbParticipants[code]={...r,generatedAt:new Date().toISOString()};
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;color:var(--text-3)">${String(r.id).padStart(3,'0')}</td>
+      <td><strong>${r.nom}</strong></td><td>${r.prenom}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:10.5px">${r.email}</td>
+      <td><span style="color:${v.color}">${v.emoji} ${v.label}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">${sc}</span></td>
+      <td><span class="chip pending">⏳ En attente</span></td>
+    </tr>`;
+  }).join('') +
+  `<tr><td colspan="7" style="text-align:center;padding:12px;color:var(--text-3);font-family:'DM Mono',monospace;font-size:10px">… et ${count-sampleRows.length} autres lignes</td></tr>`;
+  document.getElementById('pCount').textContent=Object.keys(dbParticipants).length;
+}
+
+// ================================================
+// QUEUE
+// ================================================
+function renderQueue() {
+  const body=document.getElementById('qBody');
+  const now=new Date();
+  body.innerHTML=sampleRows.map(r=>{
+    const v=CAT_DEF[r.type]||CAT_DEF.standard;
+    const sc=genRand(8);
+    const st={sent:'sent',pending:'pending',failed:'failed',queued:'queued'}[r.status]||'queued';
+    const stLabel={sent:'✅ Envoyé',pending:'⏳ Attente',failed:'❌ Échoué',queued:'🔵 File'}[st];
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;color:var(--text-3)">#${String(r.id).padStart(3,'0')}</td>
+      <td><strong>${r.prenom} ${r.nom}</strong></td>
+      <td style="font-family:'DM Mono',monospace;font-size:10.5px">${r.email}</td>
+      <td><span style="color:${v.color}">${v.emoji} ${v.label}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">${sc}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${now.toLocaleDateString('fr-FR')} ${now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="chip ${st}">${stLabel}</span></td>
+      <td><button class="btn btn-s btn-xs" onclick="toast('Renvoi #${r.id}','info')">↩</button></td>
+    </tr>`;
+  }).join('');
+}
+function filterQ(s,btn) {
+  document.querySelectorAll('[onclick^="filterQ"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  toast(`Filtre : ${s}`,'info');
+}
+
+// ================================================
+// SEND ENGINE
+// ================================================
+function startSend() {
+  isSending=true; isPaused=false;
+  document.getElementById('bStart').disabled=true;
+  document.getElementById('bPause').disabled=false;
+  document.getElementById('bStop').disabled=false;
+  document.getElementById('sendStatus').textContent='📨 Envoi en cours…';
+  let prog=parseFloat(document.getElementById('progBar').style.width)||0;
+  const total=parseInt(document.getElementById('qBadge').textContent)||248;
+  const t0=Date.now();
+  sendInterval=setInterval(()=>{
+    if(isPaused) return;
+    prog=Math.min(prog+Math.random()*2.5+0.5,100);
+    const sent=Math.round(prog*total/100);
+    const el=(Date.now()-t0)/1000;
+    const rate=el>0?(sent/el).toFixed(1):0;
+    const eta=rate>0?Math.round((total-sent)/rate):0;
+    const etaS=eta>60?`${Math.floor(eta/60)}m${eta%60}s`:`${eta}s`;
+    document.getElementById('progBar').style.width=prog+'%';
+    document.getElementById('progTxt').textContent=`${sent} / ${total} envoyés`;
+    document.getElementById('progEta').textContent=`ETA: ~${etaS}`;
+    document.getElementById('sendEta').textContent=etaS;
+    document.getElementById('sendRate').textContent=`${rate}/s`;
+    document.getElementById('lSent').textContent=sent;
+    document.getElementById('lPend').textContent=Math.max(0,total-sent);
+    document.getElementById('lFail').textContent=Math.round(sent*.03);
+    document.getElementById('sv2').textContent=sent;
+    if(prog>=100){
+      clearInterval(sendInterval);
+      document.getElementById('sendStatus').textContent='✅ Envoi terminé !';
+      document.getElementById('bStart').disabled=false;
+      document.getElementById('bPause').disabled=true;
+      document.getElementById('bStop').disabled=true;
+      toast(`${total} billets envoyés !`,'success');
+      isSending=false;
+    }
+  },120);
+}
+function pauseSend(){
+  isPaused=!isPaused;
+  document.getElementById('bPause').textContent=isPaused?'▶ Reprendre':'⏸ Pause';
+  document.getElementById('sendStatus').textContent=isPaused?'⏸ En pause…':'📨 Envoi en cours…';
+  toast(isPaused?'Pause':'Repris','info');
+}
+function stopSend(){
+  clearInterval(sendInterval); isSending=false; isPaused=false;
+  document.getElementById('bStart').disabled=false;
+  document.getElementById('bPause').disabled=true;
+  document.getElementById('bStop').disabled=true;
+  document.getElementById('bPause').textContent='⏸ Pause';
+  document.getElementById('sendStatus').textContent='⏹ Arrêté';
+  toast('Envoi arrêté','error');
+}
+
+// ================================================
+// SMTP
+// ================================================
+function testSmtp(){ toast('Test SMTP…','info'); setTimeout(()=>toast('✓ SMTP OK','success'),1500); }
+function saveSmtp(){ toast('SMTP sauvegardé','success'); }
+
+// ================================================
+// UTILITIES
+// ================================================
+function genRand(n=8){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:n},()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+
+function toast(msg, type='info') {
+  const colors={success:'var(--accent3)',error:'var(--accent4)',info:'var(--accent)',warning:'var(--accent5)'};
+  const icons={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  const el=document.createElement('div');
+  el.className='toast'; el.style.setProperty('--tc',colors[type]);
+  el.innerHTML=`<span>${icons[type]}</span>${msg}`;
+  document.getElementById('toastBox').appendChild(el);
+  setTimeout(()=>{ el.style.animation='tout .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+// ================================================
+// INIT
+// ================================================
+window.addEventListener('DOMContentLoaded',()=>{
+  // Build category grids
+  buildCatGrid();
+
+  // Init DB
+  evConfig.dbUrl = `https://lks.db/verify/${evConfig.sig}`;
+  evConfig.dbExp = computeExp(evConfig.date);
+  updateDbUI();
+  document.getElementById('evSig').textContent = evConfig.sig;
+  updateExCode();
+
+  // Charts
+  setTimeout(initCharts, 100);
+
+  // Stat counter animation
+  setTimeout(()=>{
+    document.querySelectorAll('.sval').forEach(el=>{
+      const t=parseInt(el.textContent);
+      if(!isNaN(t)&&t>0){
+        let c=0; const step=Math.max(1,Math.floor(t/28));
+        const iv=setInterval(()=>{ c=Math.min(c+step,t); el.textContent=c; if(c>=t) clearInterval(iv); },32);
+      }
+    });
+  },200);
+});
+</script>
+</body>
+</html>

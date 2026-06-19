@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutomatedTicketing LKS v1.4</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- QR Code generator (pure JS, no network needed for generation) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ========== CSS VARIABLES ========== */
+:root[data-theme="dark"] {
+  --bg-primary: #0a0b0f;
+  --bg-secondary: #111318;
+  --bg-card: #161921;
+  --bg-card-hover: #1c2029;
+  --bg-glass: rgba(22,25,33,0.7);
+  --border: rgba(255,255,255,0.06);
+  --border-accent: rgba(99,179,237,0.3);
+  --text-primary: #f0f2f7;
+  --text-secondary: #8892a4;
+  --text-muted: #4a5568;
+  --accent: #63b3ed;
+  --accent-2: #68d391;
+  --accent-3: #f6ad55;
+  --accent-4: #fc8181;
+  --accent-glow: rgba(99,179,237,0.15);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.6);
+  --neu-shadow: 4px 4px 12px rgba(0,0,0,0.5),-2px -2px 8px rgba(255,255,255,0.03);
+  --gradient-mesh: radial-gradient(ellipse at 20% 20%,rgba(99,179,237,0.06) 0%,transparent 50%),
+                   radial-gradient(ellipse at 80% 80%,rgba(104,211,145,0.04) 0%,transparent 50%);
+  --nav-bg: rgba(10,11,15,0.96);
+  --scrollbar: #1c2029;
+  --scrollbar-thumb: #2d3748;
+  --qr-bg: #ffffff;
+}
+:root[data-theme="light"] {
+  --bg-primary: #e8f4f8;
+  --bg-secondary: #f0f7fb;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fcff;
+  --bg-glass: rgba(255,255,255,0.75);
+  --border: rgba(0,0,0,0.07);
+  --border-accent: rgba(49,130,206,0.3);
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --accent: #3182ce;
+  --accent-2: #38a169;
+  --accent-3: #dd6b20;
+  --accent-4: #e53e3e;
+  --accent-glow: rgba(49,130,206,0.1);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.1);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.12);
+  --neu-shadow: 6px 6px 16px rgba(166,180,200,0.4),-4px -4px 12px rgba(255,255,255,0.9);
+  --gradient-mesh: radial-gradient(ellipse at 20% 20%,rgba(49,130,206,0.08) 0%,transparent 50%),
+                   radial-gradient(ellipse at 80% 80%,rgba(56,161,105,0.06) 0%,transparent 50%);
+  --nav-bg: rgba(232,244,248,0.96);
+  --scrollbar: #e2ecf5;
+  --scrollbar-thumb: #b2cfe0;
+  --qr-bg: #ffffff;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--scrollbar)}
+::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px}
+
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg-primary);
+  color:var(--text-primary);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background .4s ease,color .4s ease;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:var(--gradient-mesh);
+  pointer-events:none;z-index:0;
+  transition:background .4s ease;
+}
+
+/* ========== LAYOUT ========== */
+.app-container{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* ========== SIDEBAR ========== */
+.sidebar{
+  width:240px;min-width:240px;
+  background:var(--nav-bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  backdrop-filter:blur(20px);
+  position:fixed;top:0;left:0;height:100vh;
+  z-index:100;
+  transition:background .4s ease,border-color .4s ease;
+}
+.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-icon{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:10px;
+  box-shadow:0 4px 16px var(--accent-glow);
+}
+.logo-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:.02em;line-height:1.2}
+.logo-version{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.1em;margin-top:2px;opacity:.8}
+
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.nav-section-label{
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);
+  letter-spacing:.15em;text-transform:uppercase;padding:8px 12px 4px;margin-top:6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 13px;border-radius:10px;cursor:pointer;
+  transition:all .2s ease;color:var(--text-secondary);
+  font-size:13px;font-weight:500;
+  border:1px solid transparent;position:relative;overflow:hidden;
+}
+.nav-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--accent);border-radius:0 2px 2px 0;
+  transform:scaleY(0);transition:transform .2s ease;
+}
+.nav-item:hover{background:var(--accent-glow);color:var(--text-primary);border-color:var(--border-accent)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent);border-color:var(--border-accent);box-shadow:var(--shadow-sm)}
+.nav-item.active::before{transform:scaleY(1)}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;background:var(--accent);color:white;
+  font-size:10px;font-weight:700;padding:2px 7px;
+  border-radius:20px;font-family:'DM Mono',monospace;
+}
+
+.sidebar-footer{padding:14px 10px;border-top:1px solid var(--border)}
+.theme-toggle{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 13px;border-radius:10px;cursor:pointer;
+  background:var(--bg-card);border:1px solid var(--border);
+  box-shadow:var(--neu-shadow);transition:all .3s ease;
+  color:var(--text-secondary);font-size:12px;font-weight:500;
+}
+.theme-toggle:hover{color:var(--text-primary);border-color:var(--border-accent)}
+.toggle-track{
+  width:34px;height:18px;background:var(--bg-secondary);
+  border-radius:9px;position:relative;border:1px solid var(--border);
+  transition:background .3s ease;flex-shrink:0;
+}
+.toggle-track.active{background:var(--accent)}
+.toggle-thumb{
+  position:absolute;width:12px;height:12px;background:white;
+  border-radius:50%;top:2px;left:2px;
+  transition:left .3s ease;box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.toggle-track.active .toggle-thumb{left:18px}
+
+/* ========== MAIN CONTENT ========== */
+.main-content{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{
+  height:60px;background:var(--nav-bg);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;position:sticky;top:0;z-index:50;
+  transition:background .4s ease;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.topbar-subtitle{font-size:12px;color:var(--text-secondary);margin-top:1px}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;color:var(--text-secondary);font-family:'DM Mono',monospace;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent-2);box-shadow:0 0 8px var(--accent-2);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+
+.page-content{flex:1;padding:28px;overflow-y:auto}
+
+/* ========== SECTIONS ========== */
+.section{display:none;animation:fadeInUp .3s ease}
+.section.active{display:block}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ========== CARDS ========== */
+.card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:16px;padding:22px;
+  box-shadow:var(--shadow-sm);transition:all .3s ease;
+  backdrop-filter:blur(8px);
+}
+.card:hover{border-color:var(--border-accent);box-shadow:var(--shadow-md);background:var(--bg-card-hover)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  display:flex;align-items:center;gap:10px;
+}
+.card-icon{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+
+/* ========== GRIDS ========== */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+
+/* ========== STAT CARDS ========== */
+.stat-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:16px;padding:20px;position:relative;overflow:hidden;
+  transition:all .3s ease;box-shadow:var(--neu-shadow);
+}
+.stat-card::after{
+  content:'';position:absolute;top:0;right:0;
+  width:70px;height:70px;border-radius:50%;
+  opacity:.07;transform:translate(30%,-30%);background:var(--accent-color);
+}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--border-accent);box-shadow:var(--shadow-md)}
+.stat-icon-wrap{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;margin-bottom:14px;background:var(--icon-bg);
+}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:5px}
+.stat-label{font-size:12px;color:var(--text-secondary);font-weight:500}
+.stat-change{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-family:'DM Mono',monospace;
+  margin-top:7px;padding:2px 7px;border-radius:6px;
+}
+.stat-change.up{color:var(--accent-2);background:rgba(104,211,145,.1)}
+.stat-change.down{color:var(--accent-4);background:rgba(252,129,129,.1)}
+
+/* ========== SECTION HEADERS ========== */
+.section-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:5px}
+.section-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:26px}
+.section-divider{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-divider h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
+.divider-line{flex:1;height:1px;background:var(--border)}
+
+/* ========== FORM ELEMENTS ========== */
+.form-group{margin-bottom:18px}
+.form-label{
+  display:block;font-size:11px;font-weight:600;
+  color:var(--text-secondary);margin-bottom:7px;
+  letter-spacing:.05em;text-transform:uppercase;
+}
+.form-input{
+  width:100%;background:var(--bg-secondary);
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 13px;color:var(--text-primary);
+  font-family:'Outfit',sans-serif;font-size:14px;outline:none;
+  transition:all .2s ease;box-shadow:inset 2px 2px 6px rgba(0,0,0,.1);
+}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow),inset 2px 2px 6px rgba(0,0,0,.1)}
+select.form-input{cursor:pointer}
+
+/* ========== TICKET CATEGORIES ========== */
+.ticket-categories{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.ticket-cat-item{position:relative}
+.ticket-cat-item input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0}
+.ticket-cat-label{
+  display:flex;align-items:center;gap:9px;
+  padding:10px 16px;border-radius:12px;
+  border:1.5px solid var(--border);background:var(--bg-secondary);
+  cursor:pointer;transition:all .2s ease;
+  font-size:12px;font-weight:600;color:var(--text-secondary);
+  user-select:none;box-shadow:var(--neu-shadow);
+}
+.ticket-cat-label:hover{border-color:var(--accent);color:var(--text-primary)}
+.ticket-cat-item input:checked + .ticket-cat-label{
+  border-color:var(--cat-color);color:var(--cat-color);
+  background:rgba(99,99,99,.08);
+  box-shadow:0 0 0 1px var(--cat-color),var(--neu-shadow);
+}
+.cat-check{
+  width:17px;height:17px;border-radius:5px;
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;transition:all .2s ease;flex-shrink:0;
+}
+.ticket-cat-item input:checked + .ticket-cat-label .cat-check{background:var(--cat-color);border-color:var(--cat-color);color:white}
+.cat-emoji{font-size:15px}
+
+/* ========== TICKET PREVIEW CARDS ========== */
+.ticket-preview-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
+  gap:20px;min-height:160px;
+}
+.ticket-card{
+  border-radius:16px;overflow:hidden;
+  border:1px solid var(--border);box-shadow:var(--shadow-md);
+  position:relative;transition:all .3s ease;
+  animation:ticketAppear .35s ease;
+}
+@keyframes ticketAppear{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.ticket-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+
+.ticket-header{padding:18px 20px 14px;position:relative}
+.ticket-type-badge{
+  position:absolute;top:14px;right:14px;
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:.1em;padding:3px 9px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.25);color:white;
+}
+.ticket-event-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:white;margin-bottom:3px;opacity:.95}
+.ticket-holder{font-size:11px;color:rgba(255,255,255,.7);font-family:'DM Mono',monospace}
+
+/* ========== TICKET BODY WITH QR ========== */
+.ticket-body{
+  background:var(--bg-card);
+  padding:0;
+}
+.ticket-content-row{
+  display:flex;align-items:stretch;gap:0;
+}
+.ticket-meta-section{
+  flex:1;padding:14px 18px;
+}
+.ticket-qr-section{
+  width:90px;
+  background:white;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px;
+  border-left:1px dashed var(--border);
+  flex-shrink:0;
+}
+.ticket-qr-section canvas,
+.ticket-qr-section img{
+  width:70px !important;height:70px !important;
+  display:block;
+}
+/* Remove any white box artifact from QRCode lib */
+.ticket-qr-section > div {
+  background: transparent !important;
+  padding: 0 !important;
+}
+.ticket-qr-section > div > img,
+.ticket-qr-section > div > canvas {
+  display: block !important;
+}
+
+.ticket-perforated{
+  height:1px;
+  background:repeating-linear-gradient(to right,var(--border) 0,var(--border) 5px,transparent 5px,transparent 9px);
+  margin:0 -20px 14px;position:relative;
+}
+.ticket-perforated::before,.ticket-perforated::after{
+  content:'';position:absolute;width:18px;height:18px;
+  border-radius:50%;top:50%;transform:translateY(-50%);
+  background:var(--bg-primary);
+}
+.ticket-perforated::before{left:-9px}
+.ticket-perforated::after{right:-9px}
+
+.ticket-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.ticket-meta-item label{
+  font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace;
+  letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:2px;
+}
+.ticket-meta-item span{font-size:11px;font-weight:600;color:var(--text-primary)}
+
+.ticket-code-row{
+  background:var(--bg-secondary);border-radius:8px;
+  padding:6px 10px;margin-top:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.ticket-code-label{font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:.08em}
+.ticket-code-value{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);flex:1}
+
+.ticket-footer{
+  padding:9px 20px;background:var(--bg-secondary);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ticket-id{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)}
+.ticket-price{font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+
+/* ========== DB STATUS BADGE ========== */
+.db-status-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:8px;font-size:11px;font-family:'DM Mono',monospace;
+}
+.db-status-badge.active{background:rgba(104,211,145,.12);color:var(--accent-2);border:1px solid rgba(104,211,145,.25)}
+.db-status-badge.expired{background:rgba(252,129,129,.12);color:var(--accent-4);border:1px solid rgba(252,129,129,.25)}
+.db-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+
+/* ========== IMPORT / DROPZONE ========== */
+.dropzone{
+  border:2px dashed var(--border);border-radius:16px;
+  padding:44px 28px;text-align:center;cursor:pointer;
+  transition:all .3s ease;position:relative;overflow:hidden;
+  background:var(--bg-secondary);
+}
+.dropzone::before{
+  content:'';position:absolute;inset:0;
+  background:var(--accent-glow);opacity:0;transition:opacity .3s ease;
+}
+.dropzone:hover{border-color:var(--accent)}
+.dropzone:hover::before{opacity:1}
+.dropzone-icon{font-size:40px;margin-bottom:14px;display:block}
+.dropzone-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.dropzone-subtitle{font-size:12px;color:var(--text-secondary)}
+.dropzone-info{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:12px;font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;
+}
+.dropzone-chip{
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:3px 8px;border-radius:6px;
+}
+#fileInput{display:none}
+
+/* Column mapping */
+.column-map-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+}
+.col-map-item{
+  background:var(--bg-secondary);border:1px solid var(--border);
+  border-radius:10px;padding:12px;text-align:center;
+}
+.col-map-num{
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);
+  font-weight:700;margin-bottom:4px;
+}
+.col-map-name{font-size:12px;font-weight:600;margin-bottom:8px}
+.col-map-select{width:100%}
+
+/* Data table */
+.data-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{
+  background:var(--bg-secondary);padding:10px 14px;
+  text-align:left;font-size:10px;font-family:'DM Mono',monospace;
+  letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  color:var(--text-primary);vertical-align:middle;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-card-hover)}
+
+/* ========== STATUS CHIPS ========== */
+.status-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;padding:3px 9px;
+  border-radius:20px;font-family:'DM Mono',monospace;
+}
+.status-chip.sent{background:rgba(104,211,145,.12);color:var(--accent-2)}
+.status-chip.pending{background:rgba(246,173,85,.12);color:var(--accent-3)}
+.status-chip.failed{background:rgba(252,129,129,.12);color:var(--accent-4)}
+.status-chip.queued{background:rgba(99,179,237,.12);color:var(--accent)}
+
+/* ========== PROGRESS BAR ========== */
+.progress-wrap{margin:20px 0}
+.progress-track{
+  height:10px;background:var(--bg-secondary);
+  border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);position:relative;
+}
+.progress-bar{
+  height:100%;border-radius:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  transition:width .3s ease;
+  position:relative;overflow:hidden;
+}
+.progress-bar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.progress-labels{display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px}
+.progress-footer{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-secondary);font-family:'DM Mono',monospace}
+
+/* ========== SMTP CONFIG ========== */
+.smtp-test-row{display:flex;gap:10px;align-items:flex-end}
+.smtp-test-row .form-group{flex:1;margin-bottom:0}
+
+/* ========== BUTTONS ========== */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:10px;border:none;
+  cursor:pointer;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:600;transition:all .2s ease;
+  white-space:nowrap;
+}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:white;box-shadow:0 4px 14px var(--accent-glow)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
+.btn-success{background:var(--accent-2);color:white;box-shadow:0 4px 14px rgba(104,211,145,.3)}
+.btn-success:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-danger{background:var(--accent-4);color:white}
+.btn-danger:hover:not(:disabled){filter:brightness(1.1)}
+.btn-secondary{
+  background:var(--bg-secondary);color:var(--text-primary);
+  border:1px solid var(--border);box-shadow:var(--neu-shadow);
+}
+.btn-secondary:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ========== FILE STATUS ========== */
+#fileStatus{
+  display:none;
+  background:var(--bg-secondary);border:1px solid var(--accent-2);
+  border-radius:12px;padding:14px 18px;margin-top:14px;
+  display:none;align-items:center;justify-content:space-between;
+}
+#fileStatus.visible{display:flex}
+
+/* ========== TOAST ========== */
+#toastContainer{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;
+  display:flex;align-items:center;gap:10px;font-size:13px;
+  box-shadow:var(--shadow-md);backdrop-filter:blur(16px);
+  animation:toastIn .3s ease;max-width:320px;
+  border-left:3px solid var(--toast-color,var(--accent));
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
+
+/* ========== SECURITY DB PANEL ========== */
+.db-panel{
+  background:var(--bg-secondary);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;
+}
+.db-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.db-url{
+  font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--accent);background:var(--bg-card);
+  border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;word-break:break-all;margin-bottom:10px;
+}
+.db-expiry-row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-secondary)}
+.db-expiry-row strong{color:var(--accent-4)}
+
+/* ========== QUEUE FILTER BAR ========== */
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{
+  padding:5px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg-secondary);color:var(--text-secondary);
+  cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;
+  transition:all .2s ease;
+}
+.filter-btn:hover,.filter-btn.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent)}
+
+/* ========== CHARTS ========== */
+.chart-container{position:relative;height:200px}
+
+/* ========== EMPTY STATE ========== */
+.empty-state{
+  text-align:center;padding:48px 24px;color:var(--text-muted);
+}
+.empty-state-icon{font-size:40px;margin-bottom:12px;display:block;opacity:.5}
+.empty-state-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.empty-state-sub{font-size:12px}
+
+/* ========== TICKET SERIAL DISPLAY ========== */
+.serial-display{
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.serial-display .serial-icon { opacity: 0.6; font-size: 14px; }
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sidebar{display:none}.main-content{margin-left:0}.grid-4,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<div class="app-container">
+
+  <!-- ===== SIDEBAR ===== -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🎫</div>
+      <div class="logo-title">AutomatedTicketing</div>
+      <div class="logo-version">LKS — v1.4 · 2025</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="showSection('dashboard',this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showSection('config',this)">
+        <span class="nav-icon">⚙️</span> Configuration
+      </div>
+
+      <div class="nav-section-label">Billets & QR</div>
+      <div class="nav-item" onclick="showSection('templates',this)">
+        <span class="nav-icon">🎨</span> Templates & QR
+      </div>
+      <div class="nav-item" onclick="showSection('security',this)">
+        <span class="nav-icon">🔐</span> Sécurité DB
+      </div>
+
+      <div class="nav-section-label">Expédition</div>
+      <div class="nav-item" onclick="showSection('import',this)">
+        <span class="nav-icon">📥</span> Import Excel
+      </div>
+      <div class="nav-item" onclick="showSection('send',this)">
+        <span class="nav-icon">📨</span> Envoi E-mails
+        <span class="nav-badge" id="queueBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="showSection('queue',this)">
+        <span class="nav-icon">📋</span> File d'attente
+      </div>
+
+      <div class="nav-section-label">Système</div>
+      <div class="nav-item" onclick="showSection('smtp',this)">
+        <span class="nav-icon">📡</span> Config SMTP
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <div class="toggle-track" id="toggleTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span id="themeLabel">Mode Sombre</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+        <div class="topbar-subtitle" id="pageSubtitle">Vue d'ensemble — LKS Festival 2025</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          <span id="systemStatus">Système actif</span>
+        </div>
+        <div class="status-pill" id="dbStatusTopbar">
+          <span>🔐</span> DB: <span id="dbStatusText" style="color:var(--accent-2)">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="section active" id="sec-dashboard">
+        <div class="section-title">Dashboard</div>
+        <div class="section-subtitle">Vue d'ensemble de la campagne d'envoi</div>
+
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card" style="--accent-color:#63b3ed;--icon-bg:rgba(99,179,237,.15)">
+            <div class="stat-icon-wrap">📨</div>
+            <div class="stat-value">248</div>
+            <div class="stat-label">Billets générés</div>
+            <div class="stat-change up">↑ +12 aujourd'hui</div>
+          </div>
+          <div class="stat-card" style="--accent-color:#68d391;--icon-bg:rgba(104,211,145,.15)">
+            <div class="stat-icon-wrap">✅</div>
+            <div class="stat-value" id="sentCount">186</div>
+            <div class="stat-label">E-mails envoyés</div>
+            <div class="stat-change up">↑ 75%</div>
+          </div>
+          <div class="stat-card" style="--accent-color:#f6ad55;--icon-bg:rgba(246,173,85,.15)">
+            <div class="stat-icon-wrap">⏳</div>
+            <div class="stat-value">54</div>
+            <div class="stat-label">En attente</div>
+            <div class="stat-change down">↓ file active</div>
+          </div>
+          <div class="stat-card" style="--accent-color:#fc8181;--icon-bg:rgba(252,129,129,.15)">
+            <div class="stat-icon-wrap">❌</div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">Échoués</div>
+            <div class="stat-change down">↓ 3.2%</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon" style="background:rgba(99,179,237,.15)">📈</div>
+                Évolution des envois
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartSend"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon" style="background:rgba(104,211,145,.15)">🎫</div>
+                Répartition par type
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartTypes"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- DB Expiry Card -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-icon" style="background:rgba(246,173,85,.15)">🔐</div>
+              Base de Données Temporaire — Statut
+            </div>
+            <div id="dashDbBadge" class="db-status-badge active">
+              <div class="db-dot"></div> DB Active
+            </div>
+          </div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap">
+            <div>
+              <div class="form-label">URL de vérification</div>
+              <div class="db-url" id="dashDbUrl">Générez d'abord une signature dans "Sécurité DB"</div>
+            </div>
+            <div style="min-width:200px">
+              <div class="form-label">Expiration automatique</div>
+              <div class="db-expiry-row">
+                <span>⏱</span>
+                <span id="dashDbExpiry">Non défini — configurez l'événement</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CONFIGURATION ===== -->
+      <div class="section" id="sec-config">
+        <div class="section-title">Configuration</div>
+        <div class="section-subtitle">Paramètres de l'événement et des types de billets</div>
+
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(99,179,237,.15)">📅</div>Informations Événement</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom de l'événement</label>
+              <input class="form-input" id="eventName" type="text" value="LKS Festival 2025" placeholder="Nom de l'événement">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date de l'événement</label>
+              <input class="form-input" id="eventDate" type="date" value="2025-12-31">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Heure</label>
+              <input class="form-input" id="eventTime" type="time" value="20:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Lieu</label>
+              <input class="form-input" id="eventVenue" type="text" value="Palais des Congrès, Cotonou">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Signature unique de l'événement</label>
+              <div class="serial-display">
+                <span class="serial-icon">🔑</span>
+                <span id="eventSignature">LKS-EVT-2025-XXXXXXXX</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveEventConfig()" style="width:100%">💾 Sauvegarder & Régénérer Signature</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(104,211,145,.15)">🎫</div>Types de Billets Actifs</div>
+            </div>
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Cochez les catégories disponibles pour cet événement. Seuls les types cochés apparaissent dans les templates.</p>
+
+            <div class="ticket-categories" id="ticketCategoryList">
+              <div class="ticket-cat-item">
+                <input type="checkbox" id="cat-standard" checked onchange="updatePreviews()">
+                <label class="ticket-cat-label" for="cat-standard" style="--cat-color:#63b3ed">
+                  <div class="cat-check">✓</div>
+                  <span class="cat-emoji">🎫</span> Standard
+                </label>
+              </div>
+              <div class="ticket-cat-item">
+                <input type="checkbox" id="cat-vip" checked onchange="updatePreviews()">
+                <label class="ticket-cat-label" for="cat-vip" style="--cat-color:#f6ad55">
+                  <div class="cat-check">✓</div>
+                  <span class="cat-emoji">⭐</span> VIP
+                </label>
+              </div>
+              <div class="ticket-cat-item">
+                <input type="checkbox" id="cat-vvip" onchange="updatePreviews()">
+                <label class="ticket-cat-label" for="cat-vvip" style="--cat-color:#fc8181">
+                  <div class="cat-check">✓</div>
+                  <span class="cat-emoji">💎</span> VVIP
+                </label>
+              </div>
+              <div class="ticket-cat-item">
+                <input type="checkbox" id="cat-gold" onchange="updatePreviews()">
+                <label class="ticket-cat-label" for="cat-gold" style="--cat-color:#ecc94b">
+                  <div class="cat-check">✓</div>
+                  <span class="cat-emoji">🥇</span> Gold
+                </label>
+              </div>
+              <div class="ticket-cat-item">
+                <input type="checkbox" id="cat-premium" onchange="updatePreviews()">
+                <label class="ticket-cat-label" for="cat-premium" style="--cat-color:#9f7aea">
+                  <div class="cat-check">✓</div>
+                  <span class="cat-emoji">👑</span> Premium
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top:20px">
+              <div class="form-label">Prix par catégorie (FCFA)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px" id="priceGrid">
+                <div class="form-group"><label class="form-label">Standard</label><input class="form-input" id="price-standard" type="number" value="5000"></div>
+                <div class="form-group"><label class="form-label">VIP</label><input class="form-input" id="price-vip" type="number" value="15000"></div>
+                <div class="form-group"><label class="form-label">VVIP</label><input class="form-input" id="price-vvip" type="number" value="30000"></div>
+                <div class="form-group"><label class="form-label">Gold</label><input class="form-input" id="price-gold" type="number" value="50000"></div>
+                <div class="form-group"><label class="form-label">Premium</label><input class="form-input" id="price-premium" type="number" value="75000"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TEMPLATES & QR ===== -->
+      <div class="section" id="sec-templates">
+        <div class="section-title">Templates & QR Codes</div>
+        <div class="section-subtitle">Aperçu dynamique des billets avec QR codes générés automatiquement</div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-icon" style="background:rgba(104,211,145,.15)">🔄</div>
+              Génération de code aléatoire
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="regenerateAllCodes()">🔁 Régénérer tous</button>
+          </div>
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:280px">
+              <div class="form-label">Structure du code généré</div>
+              <div class="serial-display" style="font-size:11px;flex-wrap:wrap;gap:4px">
+                <span>[NOM_PRÉNOM]</span>
+                <span style="color:var(--text-muted)">·</span>
+                <span style="color:var(--accent-2)">[SIGNATURE_EVENT]</span>
+                <span style="color:var(--text-muted)">·</span>
+                <span style="color:var(--accent-3)">[RANDOM_8]</span>
+                <span style="color:var(--text-muted)">·</span>
+                <span style="color:var(--accent-4)">[DB_URL]</span>
+              </div>
+            </div>
+            <div>
+              <div class="form-label">Exemple généré</div>
+              <div class="serial-display" id="exampleCode" style="color:var(--accent-2)">
+                DUPONT_JEAN·LKS-EVT-2025·A7F3K9Q2·https://lks.db/v/XXXXXXXX
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <h3>🎨 APERÇU DES TEMPLATES ACTIFS</h3>
+          <div class="divider-line"></div>
+          <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;font-family:'DM Mono',monospace" id="previewCount">0 type(s) actif(s)</span>
+        </div>
+
+        <div class="ticket-preview-grid" id="ticketPreviewGrid">
+          <!-- Tickets rendered by JS -->
+        </div>
+      </div>
+
+      <!-- ===== SÉCURITÉ DB ===== -->
+      <div class="section" id="sec-security">
+        <div class="section-title">Sécurité & Base de Données</div>
+        <div class="section-subtitle">Gestion de la base de données temporaire pour vérification au scan</div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(252,129,129,.15)">🔐</div>DB Temporaire</div>
+              <div id="secDbBadge" class="db-status-badge active"><div class="db-dot"></div> Active</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">URL de la base de données en ligne</label>
+              <div class="db-url" id="secDbUrl">https://lks.db/verify/EVT-2025-XXXXXXXX</div>
+            </div>
+
+            <div class="db-panel">
+              <div class="db-panel-header">
+                <span style="font-size:12px;font-weight:600">📅 Expiration automatique</span>
+                <span id="secDbExpiry" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent-3)">—</span>
+              </div>
+              <div class="db-expiry-row">
+                <span>⚠️</span>
+                <span>La DB expire automatiquement le lendemain de l'événement à <strong>23:59</strong>. Toute tentative de scan après cette date retournera une erreur d'accès.</span>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="generateDb()" style="flex:1">⚡ Générer URL DB</button>
+              <button class="btn btn-danger btn-sm" onclick="revokeDb()">🗑 Révoquer</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(246,173,85,.15)">🛡</div>Participants Enregistrés</div>
+            </div>
+
+            <div style="background:var(--bg-secondary);border-radius:10px;padding:14px;margin-bottom:14px">
+              <div style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:8px">REGISTRE EN MÉMOIRE</div>
+              <div id="participantCount" style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800">0</div>
+              <div style="font-size:12px;color:var(--text-secondary)">participants enregistrés dans la DB</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Vérifier un code manuellement</label>
+              <div style="display:flex;gap:8px">
+                <input class="form-input" id="verifyCodeInput" placeholder="Collez un code à vérifier..." style="flex:1">
+                <button class="btn btn-secondary" onclick="verifyCode()">🔍</button>
+              </div>
+            </div>
+            <div id="verifyResult" style="display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:12px;font-family:'DM Mono',monospace"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== IMPORT EXCEL ===== -->
+      <div class="section" id="sec-import">
+        <div class="section-title">Import Excel</div>
+        <div class="section-subtitle">Fichier attendu : 4 colonnes strictes — Nom · Prénom · Email · Type de ticket</div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title"><div class="card-icon" style="background:rgba(99,179,237,.15)">📋</div>Structure attendue du fichier</div>
+          </div>
+          <div class="column-map-grid">
+            <div class="col-map-item">
+              <div class="col-map-num">COL A</div>
+              <div class="col-map-name">Nom</div>
+              <div style="font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace">DUPONT</div>
+            </div>
+            <div class="col-map-item">
+              <div class="col-map-num">COL B</div>
+              <div class="col-map-name">Prénom</div>
+              <div style="font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace">Jean</div>
+            </div>
+            <div class="col-map-item">
+              <div class="col-map-num">COL C</div>
+              <div class="col-map-name">Email</div>
+              <div style="font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace">jean@mail.com</div>
+            </div>
+            <div class="col-map-item" style="border:1px solid var(--accent);background:var(--accent-glow)">
+              <div class="col-map-num" style="color:var(--accent)">COL D</div>
+              <div class="col-map-name">Type de ticket</div>
+              <div style="font-size:10px;color:var(--accent);font-family:'DM Mono',monospace">VIP / Standard…</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:10px 14px;background:var(--bg-secondary);border-radius:8px;font-size:12px;color:var(--text-secondary)">
+            ⚠️ Toute colonne supplémentaire est ignorée. Le type de ticket doit correspondre exactement aux catégories configurées : <strong>Standard, VIP, VVIP, Gold, Premium</strong>.
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title"><div class="card-icon" style="background:rgba(104,211,145,.15)">📁</div>Zone d'importation</div>
+          </div>
+          <div class="dropzone" id="dropzone"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave()"
+            ondrop="handleDrop(event)"
+            onclick="document.getElementById('fileInput').click()">
+            <span class="dropzone-icon">📊</span>
+            <div class="dropzone-title">Glissez votre fichier Excel ici</div>
+            <div class="dropzone-subtitle">ou cliquez pour sélectionner</div>
+            <div class="dropzone-info">
+              <span class="dropzone-chip">.xlsx</span>
+              <span class="dropzone-chip">.xls</span>
+              <span class="dropzone-chip">.csv</span>
+            </div>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+
+          <div id="fileStatus" style="margin-top:14px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font-size:24px">📄</span>
+              <div>
+                <div id="fileName" style="font-weight:600;font-size:13px"></div>
+                <div id="fileInfo" style="font-size:11px;color:var(--text-secondary);font-family:'DM Mono',monospace"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="processFile()">▶ Traiter</button>
+              <button class="btn btn-secondary btn-sm" onclick="clearFile()">✕ Retirer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="dataTableCard" style="display:none">
+          <div class="card-header">
+            <div class="card-title"><div class="card-icon" style="background:rgba(246,173,85,.15)">👁</div>Aperçu des données</div>
+            <span id="rowCount" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-secondary)">— lignes</span>
+          </div>
+          <div class="data-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Code généré</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">Aucun fichier importé</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ENVOI E-MAILS ===== -->
+      <div class="section" id="sec-send">
+        <div class="section-title">Envoi E-mails</div>
+        <div class="section-subtitle">Expédition automatisée asynchrone des billets avec QR codes</div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title"><div class="card-icon" style="background:rgba(104,211,145,.15)">📨</div>Contrôle d'envoi</div>
+            <span id="progressStatus" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text-secondary)">⏸ En attente</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-labels">
+              <span style="font-family:'DM Mono',monospace;font-size:12px" id="progressText">0 / 0 envoyés</span>
+              <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)" id="progressEta">—</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" id="mainProgressBar" style="width:0%"></div>
+            </div>
+            <div class="progress-footer">
+              <span>Vitesse: <span id="sendRate">—</span></span>
+              <span>ETA: <span id="progressEtaFoot">—</span></span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="btn btn-success" id="btnStart" onclick="startSending()">▶ Démarrer l'envoi</button>
+            <button class="btn btn-secondary" id="btnPause" onclick="pauseSending()" disabled>⏸ Pause</button>
+            <button class="btn btn-danger" id="btnStop" onclick="stopSending()" disabled>⏹ Arrêter</button>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="stat-card" style="--accent-color:#68d391;--icon-bg:rgba(104,211,145,.15)">
+            <div class="stat-icon-wrap">✅</div>
+            <div class="stat-value" id="liveSent">186</div>
+            <div class="stat-label">Envoyés</div>
+          </div>
+          <div class="stat-card" style="--accent-color:#f6ad55;--icon-bg:rgba(246,173,85,.15)">
+            <div class="stat-icon-wrap">⏳</div>
+            <div class="stat-value" id="livePending">54</div>
+            <div class="stat-label">En attente</div>
+          </div>
+          <div class="stat-card" style="--accent-color:#fc8181;--icon-bg:rgba(252,129,129,.15)">
+            <div class="stat-icon-wrap">❌</div>
+            <div class="stat-value" id="liveFailed">8</div>
+            <div class="stat-label">Échoués</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FILE D'ATTENTE ===== -->
+      <div class="section" id="sec-queue">
+        <div class="section-title">File d'attente</div>
+        <div class="section-subtitle">Suivi individuel des expéditions</div>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterQueue('all',this)">Tous</button>
+          <button class="filter-btn" onclick="filterQueue('sent',this)">✅ Envoyés</button>
+          <button class="filter-btn" onclick="filterQueue('pending',this)">⏳ En attente</button>
+          <button class="filter-btn" onclick="filterQueue('failed',this)">❌ Échoués</button>
+        </div>
+
+        <div class="card">
+          <div class="data-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Participant</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Code</th>
+                  <th>Généré le</th>
+                  <th>Statut</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="queueBody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Aucun participant dans la file</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CONFIG SMTP ===== -->
+      <div class="section" id="sec-smtp">
+        <div class="section-title">Configuration SMTP</div>
+        <div class="section-subtitle">Paramètres du serveur d'envoi d'e-mails</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(99,179,237,.15)">📡</div>Serveur SMTP</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hôte SMTP</label>
+              <input class="form-input" type="text" value="smtp.gmail.com" placeholder="smtp.example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Port</label>
+              <select class="form-input">
+                <option>587 (TLS)</option>
+                <option>465 (SSL)</option>
+                <option>25</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Adresse e-mail expéditeur</label>
+              <input class="form-input" type="email" placeholder="noreply@evenement.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mot de passe / App Password</label>
+              <input class="form-input" type="password" placeholder="••••••••••••">
+            </div>
+            <div class="smtp-test-row">
+              <button class="btn btn-secondary" onclick="testSmtp()">🔌 Tester la connexion</button>
+              <button class="btn btn-primary" onclick="saveSmtp()">💾 Sauvegarder</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-icon" style="background:rgba(104,211,145,.15)">✉️</div>Template d'E-mail</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objet de l'e-mail</label>
+              <input class="form-input" type="text" value="🎫 Votre billet pour {{EVENT_NAME}}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Corps du message</label>
+              <textarea class="form-input" rows="6" style="resize:vertical">Bonjour {{PRENOM}} {{NOM}},
+
+Votre billet {{TYPE}} pour {{EVENT_NAME}} est en pièce jointe.
+
+📅 Date : {{DATE}}
+📍 Lieu : {{VENUE}}
+🔑 Code : {{CODE}}
+
+Présentez ce QR code à l'entrée.
+
+Cordialement,
+L'équipe LKS</textarea>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">
+              Variables : {{NOM}} {{PRENOM}} {{EMAIL}} {{TYPE}} {{CODE}} {{EVENT_NAME}} {{DATE}} {{VENUE}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end page-content -->
+  </main>
+</div><!-- end app-container -->
+
+<script>
+// ========================================
+// GLOBAL STATE
+// ========================================
+let currentTheme = 'dark';
+let isSending = false;
+let isPaused = false;
+let sendingInterval = null;
+let participants = []; // loaded from Excel
+let dbParticipants = {}; // in-memory DB for QR verification
+
+// Event config
+let eventConfig = {
+  name: 'LKS Festival 2025',
+  date: '2025-12-31',
+  time: '20:00',
+  venue: 'Palais des Congrès, Cotonou',
+  signature: '',
+  dbUrl: '',
+  dbExpiry: ''
+};
+
+// Ticket config
+const ticketConfig = {
+  standard: { label:'Standard', emoji:'🎫', gradient:'linear-gradient(135deg,#2b6cb0,#3182ce)', color:'#63b3ed', price:'5 000' },
+  vip:      { label:'VIP',      emoji:'⭐', gradient:'linear-gradient(135deg,#744210,#c05621)', color:'#f6ad55', price:'15 000' },
+  vvip:     { label:'VVIP',     emoji:'💎', gradient:'linear-gradient(135deg,#63171b,#c53030)', color:'#fc8181', price:'30 000' },
+  gold:     { label:'Gold',     emoji:'🥇', gradient:'linear-gradient(135deg,#744210,#d69e2e)', color:'#ecc94b', price:'50 000' },
+  premium:  { label:'Premium',  emoji:'👑', gradient:'linear-gradient(135deg,#44337a,#6b46c1)', color:'#9f7aea', price:'75 000' }
+};
+
+// Sample data (simulates Excel import)
+const sampleData = [
+  {id:1,nom:'Dupont',prenom:'Jean',email:'jean.dupont@gmail.com',type:'VIP',status:'sent'},
+  {id:2,nom:'Koffi',prenom:'Amara',email:'amara.koffi@yahoo.fr',type:'Standard',status:'sent'},
+  {id:3,nom:'Mbeki',prenom:'Thabo',email:'thabo@outlook.com',type:'VVIP',status:'pending'},
+  {id:4,nom:'Adeyemi',prenom:'Chioma',email:'chioma.a@gmail.com',type:'Gold',status:'sent'},
+  {id:5,nom:'Traoré',prenom:'Fatou',email:'fatou.t@mail.com',type:'Premium',status:'failed'},
+  {id:6,nom:'Mensah',prenom:'Kofi',email:'k.mensah@gmail.com',type:'Standard',status:'sent'},
+  {id:7,nom:'Diallo',prenom:'Mariama',email:'m.diallo@orange.bj',type:'VIP',status:'pending'},
+  {id:8,nom:'Sawadogo',prenom:'Idrissa',email:'i.saw@gmail.com',type:'Standard',status:'queued'},
+];
+
+// ========================================
+// CODE GENERATION ENGINE
+// ========================================
+function generateRandomCode(length=8) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = '';
+  for(let i=0;i<length;i++) result += chars[Math.floor(Math.random()*chars.length)];
+  return result;
+}
+
+function generateEventSignature() {
+  const name = (document.getElementById('eventName')?.value || 'LKS').replace(/\s+/g,'').toUpperCase().slice(0,6);
+  const date = (document.getElementById('eventDate')?.value || '2025-12-31').replace(/-/g,'').slice(2);
+  const rand = generateRandomCode(6);
+  return `LKS-${name}-${date}-${rand}`;
+}
+
+function generateParticipantCode(nom, prenom, signature) {
+  const namepart = `${nom.toUpperCase().replace(/\s+/g,'_')}_${prenom.toUpperCase().replace(/\s+/g,'_')}`;
+  const rand = generateRandomCode(8);
+  const dbUrl = eventConfig.dbUrl || `https://lks.db/v/${generateRandomCode(10)}`;
+  return `${namepart}·${signature}·${rand}·${dbUrl}`;
+}
+
+function generateDbUrl(signature) {
+  return `https://lks.db/verify/${signature}`;
+}
+
+function computeDbExpiry(eventDate) {
+  const d = new Date(eventDate);
+  d.setDate(d.getDate()+1);
+  return d.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' à 23h59';
+}
+
+// ========================================
+// NAVIGATION
+// ========================================
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {
+    dashboard:'Dashboard',config:'Configuration',
+    templates:'Templates & QR Codes',security:'Sécurité & Base de Données',
+    import:'Import Excel',send:'Envoi E-mails',queue:'File d\'attente',smtp:'Config SMTP'
+  };
+  document.getElementById('pageTitle').textContent = titles[id]||id;
+  if(id==='templates') { updatePreviews(); }
+  if(id==='queue') { loadQueueTable(); }
+}
+
+// ========================================
+// THEME TOGGLE
+// ========================================
+function toggleTheme() {
+  currentTheme = currentTheme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',currentTheme);
+  const track = document.getElementById('toggleTrack');
+  const label = document.getElementById('themeLabel');
+  if(currentTheme==='light') {
+    track.classList.add('active');
+    label.textContent='Mode Clair';
+  } else {
+    track.classList.remove('active');
+    label.textContent='Mode Sombre';
+  }
+  // Re-render charts
+  setTimeout(()=>{ initCharts(); },400);
+}
+
+// ========================================
+// CHARTS
+// ========================================
+let chartSend=null, chartTypes=null;
+function initCharts() {
+  const isDark = currentTheme==='dark';
+  const textColor = isDark?'#8892a4':'#4a5568';
+  const gridColor = isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+
+  if(chartSend) chartSend.destroy();
+  if(chartTypes) chartTypes.destroy();
+
+  const ctxS = document.getElementById('chartSend')?.getContext('2d');
+  const ctxT = document.getElementById('chartTypes')?.getContext('2d');
+  if(!ctxS||!ctxT) return;
+
+  const accent = isDark?'#63b3ed':'#3182ce';
+  const accent2 = isDark?'#68d391':'#38a169';
+
+  chartSend = new Chart(ctxS,{
+    type:'line',
+    data:{
+      labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+      datasets:[{
+        label:'Envoyés',data:[12,28,35,42,55,68,75],
+        borderColor:accent,backgroundColor:accent+'22',
+        borderWidth:2,fill:true,tension:0.4,pointRadius:3
+      },{
+        label:'Échoués',data:[1,2,1,3,2,1,0],
+        borderColor:isDark?'#fc8181':'#e53e3e',backgroundColor:(isDark?'#fc8181':'#e53e3e')+'22',
+        borderWidth:2,fill:true,tension:0.4,pointRadius:3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:textColor,font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:textColor,font:{size:10}},grid:{color:gridColor}},
+        y:{ticks:{color:textColor,font:{size:10}},grid:{color:gridColor}}
+      }
+    }
+  });
+
+  chartTypes = new Chart(ctxT,{
+    type:'doughnut',
+    data:{
+      labels:['Standard','VIP','VVIP','Gold','Premium'],
+      datasets:[{
+        data:[95,72,38,28,15],
+        backgroundColor:[accent,isDark?'#f6ad55':'#dd6b20',isDark?'#fc8181':'#e53e3e',isDark?'#ecc94b':'#d69e2e',isDark?'#9f7aea':'#805ad5'],
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:textColor,font:{size:11},padding:10}}}
+    }
+  });
+}
+
+// ========================================
+// QR CODE RENDERING (Canvas-based)
+// ========================================
+function renderQRCanvas(container, text, size=70) {
+  container.innerHTML = '';
+  
+  // Pure canvas QR generation via simple matrix encoding
+  // We use a simple visual QR approximation via canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  canvas.style.width = size+'px';
+  canvas.style.height = size+'px';
+  container.appendChild(canvas);
+  
+  const ctx = canvas.getContext('2d');
+  
+  // Try QRCode library first
+  if(typeof QRCode !== 'undefined') {
+    container.innerHTML = '';
+    try {
+      new QRCode(container, {
+        text: text,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      return;
+    } catch(e) {}
+  }
+  
+  // Fallback: draw a stylized placeholder that looks like a QR
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,size,size);
+  
+  const cell = Math.floor(size/21);
+  ctx.fillStyle = '#000000';
+  
+  // Generate pseudo-random but deterministic pattern from text hash
+  let hash = 0;
+  for(let i=0;i<text.length;i++) hash = ((hash<<5)-hash)+text.charCodeAt(i)|0;
+  
+  // Draw finder patterns (top-left, top-right, bottom-left)
+  const drawFinder = (ox,oy) => {
+    ctx.fillStyle='#000';
+    ctx.fillRect(ox,oy,7*cell,7*cell);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(ox+cell,oy+cell,5*cell,5*cell);
+    ctx.fillStyle='#000';
+    ctx.fillRect(ox+2*cell,oy+2*cell,3*cell,3*cell);
+  };
+  drawFinder(0,0);
+  drawFinder((21-7)*cell,0);
+  drawFinder(0,(21-7)*cell);
+  
+  // Data area (random-ish dots based on hash)
+  for(let r=0;r<21;r++) {
+    for(let c=0;c<21;c++) {
+      // Skip finder pattern areas
+      if((r<8&&c<8)||(r<8&&c>12)||(r>12&&c<8)) continue;
+      const bit = ((hash^(r*17+c*13+r*c))&1);
+      if(bit) {
+        ctx.fillStyle='#000';
+        ctx.fillRect(c*cell,r*cell,cell,cell);
+      }
+    }
+  }
+}
+
+// ========================================
+// TICKET PREVIEW (with real QR codes)
+// ========================================
+function updatePreviews() {
+  const active = ['standard','vip','vvip','gold','premium'].filter(c => {
+    const el = document.getElementById('cat-'+c);
+    return el && el.checked;
+  });
+
+  const grid = document.getElementById('ticketPreviewGrid');
+  const counter = document.getElementById('previewCount');
+  if(counter) counter.textContent = `${active.length} type(s) actif(s)`;
+
+  if(active.length===0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <span class="empty-state-icon">🎫</span>
+      <div class="empty-state-title">Aucun type de billet sélectionné</div>
+      <div class="empty-state-sub">Cochez des catégories dans la section Configuration</div>
+    </div>`;
+    return;
+  }
+
+  const eventName = document.getElementById('eventName')?.value||'LKS Festival 2025';
+  const eventDate = document.getElementById('eventDate')?.value||'2025-12-31';
+  const eventTime = document.getElementById('eventTime')?.value||'20:00';
+  const eventVenue = document.getElementById('eventVenue')?.value||'Palais des Congrès, Cotonou';
+  const sig = eventConfig.signature||'LKS-EVT-2025-XXXXXX';
+
+  const dateDisplay = new Date(eventDate).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+  const priceMap = {};
+  ['standard','vip','vvip','gold','premium'].forEach(c=>{
+    const el = document.getElementById('price-'+c);
+    priceMap[c] = el ? parseInt(el.value).toLocaleString('fr-FR') : ticketConfig[c].price;
+  });
+
+  grid.innerHTML = active.map(cat => {
+    const t = ticketConfig[cat];
+    const code = generateParticipantCode('DUPONT','Jean',sig);
+    const shortCode = code.split('·')[2]||'A7F3K9Q2';
+    const ticketId = `LKS-${shortCode}`;
+
+    return `
+    <div class="ticket-card">
+      <div class="ticket-header" style="background:${t.gradient}">
+        <div class="ticket-type-badge">${t.emoji} ${t.label.toUpperCase()}</div>
+        <div style="margin-bottom:3px">
+          <div class="ticket-event-name">${eventName}</div>
+          <div class="ticket-holder">JEAN DUPONT — Exemple</div>
+        </div>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-perforated"></div>
+        <div class="ticket-content-row">
+          <div class="ticket-meta-section">
+            <div class="ticket-meta">
+              <div class="ticket-meta-item">
+                <label>Date</label>
+                <span>${dateDisplay}</span>
+              </div>
+              <div class="ticket-meta-item">
+                <label>Heure</label>
+                <span>${eventTime}</span>
+              </div>
+              <div class="ticket-meta-item">
+                <label>Lieu</label>
+                <span>${eventVenue.split(',')[0]}</span>
+              </div>
+              <div class="ticket-meta-item">
+                <label>Catégorie</label>
+                <span style="color:${t.color}">${t.label}</span>
+              </div>
+            </div>
+            <div class="ticket-code-row">
+              <span class="ticket-code-label">CODE</span>
+              <span class="ticket-code-value">${shortCode}</span>
+            </div>
+          </div>
+          <div class="ticket-qr-section" id="qr-${cat}">
+            <!-- QR rendered by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="ticket-footer">
+        <span class="ticket-id">${ticketId}</span>
+        <span class="ticket-price" style="color:${t.color}">${priceMap[cat]} FCFA</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Render QR codes after DOM update
+  setTimeout(()=>{
+    active.forEach(cat => {
+      const sig2 = eventConfig.signature||'LKS-EVT-2025-XXXXXX';
+      const code = generateParticipantCode('DUPONT','Jean',sig2);
+      const qrContainer = document.getElementById('qr-'+cat);
+      if(qrContainer) renderQRCanvas(qrContainer, code, 70);
+    });
+  }, 50);
+}
+
+// ========================================
+// EVENT CONFIG
+// ========================================
+function saveEventConfig() {
+  eventConfig.name = document.getElementById('eventName')?.value||'LKS Festival 2025';
+  eventConfig.date = document.getElementById('eventDate')?.value||'2025-12-31';
+  eventConfig.time = document.getElementById('eventTime')?.value||'20:00';
+  eventConfig.venue = document.getElementById('eventVenue')?.value||'Palais des Congrès, Cotonou';
+  eventConfig.signature = generateEventSignature();
+  eventConfig.dbUrl = generateDbUrl(eventConfig.signature);
+  eventConfig.dbExpiry = computeDbExpiry(eventConfig.date);
+
+  document.getElementById('eventSignature').textContent = eventConfig.signature;
+  document.getElementById('pageSubtitle').textContent = `Vue d'ensemble — ${eventConfig.name}`;
+
+  // Update DB URLs everywhere
+  updateDbDisplay();
+  updateExampleCode();
+  updatePreviews();
+  showToast(`Signature générée : ${eventConfig.signature}`, 'success');
+}
+
+function updateDbDisplay() {
+  const url = eventConfig.dbUrl||'Générez d\'abord une signature dans "Sécurité DB"';
+  const expiry = eventConfig.dbExpiry||'Non défini';
+  const els = ['dashDbUrl','secDbUrl'];
+  els.forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=url; });
+  const els2 = ['dashDbExpiry','secDbExpiry'];
+  els2.forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=expiry; });
+}
+
+function updateExampleCode() {
+  const sig = eventConfig.signature||'LKS-EVT-2025-XXXXXX';
+  const el = document.getElementById('exampleCode');
+  if(el) el.textContent = `DUPONT_JEAN·${sig}·A7F3K9Q2·${eventConfig.dbUrl||'https://lks.db/v/XXXXXXXX'}`;
+}
+
+function regenerateAllCodes() {
+  updateExampleCode();
+  updatePreviews();
+  showToast('Codes régénérés pour l\'aperçu', 'info');
+}
+
+// ========================================
+// SECURITY DB
+// ========================================
+function generateDb() {
+  if(!eventConfig.signature) {
+    showToast('Configurez d\'abord l\'événement', 'warning');
+    return;
+  }
+  eventConfig.dbUrl = generateDbUrl(eventConfig.signature);
+  eventConfig.dbExpiry = computeDbExpiry(eventConfig.date||'2025-12-31');
+  updateDbDisplay();
+  document.getElementById('participantCount').textContent = Object.keys(dbParticipants).length;
+  showToast('Base de données temporaire générée !', 'success');
+}
+
+function revokeDb() {
+  if(!confirm('Révoquer la base de données ? Tous les scans échoueront.')) return;
+  eventConfig.dbUrl = '';
+  eventConfig.dbExpiry = '';
+  dbParticipants = {};
+  updateDbDisplay();
+  document.getElementById('participantCount').textContent = '0';
+  document.getElementById('secDbBadge').className = 'db-status-badge expired';
+  document.getElementById('secDbBadge').innerHTML = '<div class="db-dot" style="animation:none;opacity:.5"></div> Révoquée';
+  showToast('Base de données révoquée', 'error');
+}
+
+function verifyCode() {
+  const code = document.getElementById('verifyCodeInput').value.trim();
+  const result = document.getElementById('verifyResult');
+  if(!code) return;
+  
+  // Simulate verification
+  const isValid = code.includes('·') && code.length > 10;
+  const isInDb = dbParticipants[code] !== undefined;
+  
+  result.style.display = 'block';
+  if(isValid) {
+    result.style.background = 'rgba(104,211,145,.1)';
+    result.style.border = '1px solid rgba(104,211,145,.3)';
+    result.style.color = 'var(--accent-2)';
+    result.textContent = '✅ Code valide — Participant autorisé';
+  } else {
+    result.style.background = 'rgba(252,129,129,.1)';
+    result.style.border = '1px solid rgba(252,129,129,.3)';
+    result.style.color = 'var(--accent-4)';
+    result.textContent = '❌ Code invalide ou non trouvé dans la DB';
+  }
+}
+
+// ========================================
+// FILE HANDLING
+// ========================================
+function handleDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  dz.style.borderColor='var(--accent)';
+  dz.style.background='var(--accent-glow)';
+}
+function handleDragLeave() {
+  const dz = document.getElementById('dropzone');
+  dz.style.borderColor='';dz.style.background='';
+}
+function handleDrop(e) {
+  e.preventDefault();handleDragLeave();
+  const file = e.dataTransfer.files[0];
+  if(file) loadFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if(file) loadFile(file);
+}
+
+function loadFile(file) {
+  const validExt=['.xlsx','.xls','.csv'];
+  const ext='.'+file.name.split('.').pop().toLowerCase();
+  if(!validExt.includes(ext)) {
+    showToast('Format invalide. Accepté : .xlsx, .xls, .csv','error');
+    return;
+  }
+  
+  const statusEl = document.getElementById('fileStatus');
+  statusEl.style.display='flex';statusEl.classList.add('visible');
+  document.getElementById('fileName').textContent=file.name;
+  document.getElementById('fileInfo').textContent=`${(file.size/1024).toFixed(1)} KB · Validation en cours...`;
+
+  setTimeout(()=>{
+    // Validate columns (simulated)
+    const rows = Math.floor(Math.random()*200)+50;
+    document.getElementById('fileInfo').textContent=`${rows} lignes · 4 colonnes validées ✓`;
+    document.getElementById('rowCount').textContent=`${rows} lignes`;
+    document.getElementById('dataTableCard').style.display='block';
+    loadSampleTable(rows);
+    document.getElementById('queueBadge').textContent=rows;
+    showToast(`Fichier importé ! ${rows} participants détectés.`,'success');
+  },900);
+}
+
+function loadSampleTable(count) {
+  const sig = eventConfig.signature||'LKS-EVT-2025-XXXXXX';
+  const body = document.getElementById('dataTableBody');
+  body.innerHTML = sampleData.map(r=>{
+    const code = generateParticipantCode(r.nom,r.prenom,sig);
+    const shortCode = code.split('·')[2]||generateRandomCode(8);
+    dbParticipants[code] = {...r, generatedAt: new Date().toISOString()};
+    return `
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--text-muted)">${String(r.id).padStart(3,'0')}</span></td>
+      <td><strong>${r.nom}</strong></td>
+      <td>${r.prenom}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">${r.email}</td>
+      <td><span style="color:${ticketConfig[r.type.toLowerCase()]?.color||'var(--accent)'}">
+        ${ticketConfig[r.type.toLowerCase()]?.emoji||'🎫'} ${r.type}
+      </span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">${shortCode}</span></td>
+      <td><span class="status-chip pending">⏳ En attente</span></td>
+    </tr>`;
+  }).join('') +
+  `<tr><td colspan="7" style="text-align:center;padding:14px;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">
+    ... et ${count-sampleData.length} autres lignes
+  </td></tr>`;
+  document.getElementById('participantCount').textContent = Object.keys(dbParticipants).length;
+}
+
+function clearFile() {
+  document.getElementById('fileStatus').style.display='none';
+  document.getElementById('fileStatus').classList.remove('visible');
+  document.getElementById('fileInput').value='';
+  document.getElementById('queueBadge').textContent='0';
+  document.getElementById('dataTableCard').style.display='none';
+  document.getElementById('dataTableBody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">Aucun fichier importé</td></tr>';
+}
+
+function processFile() {
+  showToast('Codes générés et ajoutés à la file d\'envoi !','success');
+  loadQueueTable();
+}
+
+// ========================================
+// QUEUE TABLE
+// ========================================
+function loadQueueTable() {
+  const sig = eventConfig.signature||'LKS-EVT-2025-XXXXXX';
+  const body = document.getElementById('queueBody');
+  const now = new Date();
+  body.innerHTML = sampleData.map(r=>{
+    const code = generateParticipantCode(r.nom,r.prenom,sig);
+    const shortCode = code.split('·')[2]||generateRandomCode(8);
+    const t = ticketConfig[r.type.toLowerCase()];
+    return `
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--text-muted)">#${String(r.id).padStart(3,'0')}</span></td>
+      <td><strong>${r.prenom} ${r.nom}</strong></td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">${r.email}</td>
+      <td><span style="color:${t?.color||'var(--accent)'}">
+        ${t?.emoji||'🎫'} ${r.type}
+      </span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">${shortCode}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted)">${now.toLocaleDateString('fr-FR')} ${now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="status-chip ${r.status}">${
+        r.status==='sent'?'✅ Envoyé':
+        r.status==='pending'?'⏳ En attente':
+        r.status==='failed'?'❌ Échoué':'🔵 File'
+      }</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="retrySend(${r.id})">↩ Renvoi</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterQueue(status, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  showToast(`Filtre : ${status}`,'info');
+}
+
+function retrySend(id) {
+  showToast(`Re-envoi programmé pour #${id}`,'info');
+}
+
+// ========================================
+// SEND ENGINE (async simulation)
+// ========================================
+function startSending() {
+  isSending=true; isPaused=false;
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnPause').disabled=false;
+  document.getElementById('btnStop').disabled=false;
+  document.getElementById('progressStatus').textContent='📨 Envoi en cours...';
+
+  let progress = parseFloat(document.getElementById('mainProgressBar').style.width)||0;
+  const total = parseInt(document.getElementById('queueBadge').textContent)||248;
+  const startTime = Date.now();
+
+  sendingInterval = setInterval(()=>{
+    if(isPaused) return;
+    progress = Math.min(progress+Math.random()*2.5+0.5, 100);
+    const sent = Math.round(progress*total/100);
+    const failed = Math.round(sent*0.03);
+    const elapsed = (Date.now()-startTime)/1000;
+    const rate = elapsed>0?(sent/elapsed).toFixed(1):0;
+    const etaSec = rate>0?Math.round((total-sent)/rate):0;
+    const etaStr = etaSec>60?`${Math.floor(etaSec/60)}m${etaSec%60}s`:`${etaSec}s`;
+
+    document.getElementById('mainProgressBar').style.width=progress+'%';
+    document.getElementById('progressText').textContent=`${sent} / ${total} envoyés`;
+    document.getElementById('progressEta').textContent=`ETA: ~${etaStr}`;
+    document.getElementById('progressEtaFoot').textContent=etaStr;
+    document.getElementById('sendRate').textContent=`${rate} /s`;
+    document.getElementById('liveSent').textContent=sent;
+    document.getElementById('livePending').textContent=Math.max(0,total-sent);
+    document.getElementById('liveFailed').textContent=failed;
+    document.getElementById('sentCount').textContent=sent;
+
+    if(progress>=100) {
+      clearInterval(sendingInterval);
+      document.getElementById('progressStatus').textContent='✅ Envoi terminé !';
+      document.getElementById('progressEtaFoot').textContent='Terminé';
+      document.getElementById('btnStart').disabled=false;
+      document.getElementById('btnPause').disabled=true;
+      document.getElementById('btnStop').disabled=true;
+      showToast(`${total} billets envoyés avec succès !`,'success');
+      isSending=false;
+    }
+  },120);
+}
+
+function pauseSending() {
+  isPaused=!isPaused;
+  document.getElementById('btnPause').textContent=isPaused?'▶ Reprendre':'⏸ Pause';
+  document.getElementById('progressStatus').textContent=isPaused?'⏸ En pause...':'📨 Envoi en cours...';
+  showToast(isPaused?'Envoi mis en pause':'Envoi repris','info');
+}
+
+function stopSending() {
+  clearInterval(sendingInterval);
+  isSending=false; isPaused=false;
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnPause').disabled=true;
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('btnPause').textContent='⏸ Pause';
+  document.getElementById('progressStatus').textContent='⏹ Envoi arrêté';
+  document.getElementById('progressEtaFoot').textContent='—';
+  document.getElementById('sendRate').textContent='—';
+  showToast('Envoi arrêté','error');
+}
+
+// ========================================
+// SMTP ACTIONS
+// ========================================
+function testSmtp() {
+  showToast('Test SMTP en cours...','info');
+  setTimeout(()=>showToast('✓ Connexion SMTP réussie','success'),1500);
+}
+function saveSmtp() { showToast('Configuration SMTP sauvegardée !','success'); }
+
+// ========================================
+// TOAST SYSTEM
+// ========================================
+function showToast(msg, type='info') {
+  const colors={success:'var(--accent-2)',error:'var(--accent-4)',info:'var(--accent)',warning:'var(--accent-3)'};
+  const icons={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  const toast = document.createElement('div');
+  toast.className='toast';
+  toast.style.setProperty('--toast-color',colors[type]);
+  toast.innerHTML=`<span>${icons[type]}</span>${msg}`;
+  const container = document.getElementById('toastContainer');
+  container.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.animation='toastOut .3s ease forwards';
+    setTimeout(()=>toast.remove(),300);
+  },3200);
+}
+
+// ========================================
+// INIT
+// ========================================
+window.addEventListener('DOMContentLoaded',()=>{
+  // Initial signature
+  eventConfig.signature = 'LKS-LKSFES-251231-X4K9PQ';
+  eventConfig.dbUrl = generateDbUrl(eventConfig.signature);
+  eventConfig.dbExpiry = computeDbExpiry('2025-12-31');
+  document.getElementById('eventSignature').textContent = eventConfig.signature;
+  updateDbDisplay();
+  updateExampleCode();
+  
+  // Charts
+  setTimeout(initCharts, 100);
+  
+  // Initial preview (none active by default)
+  updatePreviews();
+  
+  // Animate stat values
+  setTimeout(()=>{
+    document.querySelectorAll('.stat-value').forEach(el=>{
+      const target = parseInt(el.textContent.replace(/\D/g,''));
+      if(!isNaN(target)&&target>0) {
+        let current=0;
+        const step=Math.max(1,Math.floor(target/30));
+        const interval=setInterval(()=>{
+          current=Math.min(current+step,target);
+          el.textContent=current;
+          if(current>=target) clearInterval(interval);
+        },30);
+      }
+    });
+  },200);
+});
+</script>
+</body>
+</html>
